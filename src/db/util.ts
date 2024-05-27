@@ -1,4 +1,4 @@
-import type { Schema } from 'mongoose';
+import type { Schema, SchemaOptions } from 'mongoose';
 import mongoose from 'mongoose';
 
 const schemas: Record<string, Schema> = {};
@@ -25,3 +25,13 @@ export const modelGetter = (modelName: string, schema: Schema) => () => {
     return mongoose.model<typeof schema>(modelName, schema);
   }
 };
+
+export function withTimestampsAndId<O extends SchemaOptions>(options: O): O {
+  options.timestamps = {
+    createdAt: 'timestamps.createdAt',
+    updatedAt: 'timestamps.updatedAt',
+  };
+  options.id = true;
+
+  return options;
+}

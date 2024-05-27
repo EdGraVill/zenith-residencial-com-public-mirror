@@ -1,10 +1,11 @@
-import type { Document, ObjectId } from 'mongoose';
-import type { SpaceType } from './model';
-import { getSpaceModel } from './model';
-import { produce } from 'immer';
-import type { ImageType, UUIDType } from '@/commonTypes';
-import assert from 'assert';
+import type { SpaceType } from '@/db/Space.model';
+import { getSpaceModel } from '@/db/Space.model';
 import { SpaceDbError, SpaceImageNotFound, SpaceNotFound } from './errors';
+import type { Document, ObjectId } from 'mongoose';
+import assert from 'assert';
+import type { ImageType } from '@/db/commonSchemas';
+import { produce } from 'immer';
+import type { UUIDType } from '@/commonTypes';
 
 export default class Space {
   public static async create(
@@ -68,8 +69,10 @@ export default class Space {
     try {
       const images = this.document.get('images');
 
-      const newImages = produce(images, (draft) => {
+      const newImages = produce(images, (draft: ImageType[]) => {
         draft.push(image);
+
+        return draft;
       });
 
       this.document.set('images', newImages);

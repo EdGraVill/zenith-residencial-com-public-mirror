@@ -1,11 +1,7 @@
+import type { BookingType } from '@/db/Booking.model';
+import { getBookingModel } from '@/db/Booking.model';
+import Space from '../Space/Space.controller';
 import assert from 'assert';
-import Space from '../Space';
-import { getBookingModel, type BookingType } from './model';
-import { format } from 'date-fns/format';
-import { differenceInMinutes } from 'date-fns/differenceInMinutes';
-import type { DayOfWeekType } from '@/commonTypes';
-import { isValidStartTime } from '@/timeUtils';
-import type { Document, ObjectId } from 'mongoose';
 import { SpaceNotFound } from '../Space/errors';
 import {
   BookingDbError,
@@ -15,6 +11,11 @@ import {
   SpaceClosed,
   TooManyPeople,
 } from './errors';
+import { format } from 'date-fns/format';
+import type { DayOfWeekType } from '@/db/commonSchemas';
+import { differenceInMinutes } from 'date-fns/differenceInMinutes';
+import { isValidStartTime } from '@/timeUtils';
+import type { Document, ObjectId } from 'mongoose';
 
 export default class Booking {
   public static async book(
@@ -89,7 +90,7 @@ export default class Booking {
       throw new BookingDbError(error as Error);
     }
 
-    const totalPeople = booking.extraPeople.length + 1;
+    const totalPeople = booking.extraPeopleId.length + 1;
     const alreadyBookedPeople = booksInsideSlot.reduce((acc, book) => acc + book.get('extraPeople').length + 1, 0);
 
     assert(
@@ -108,7 +109,7 @@ export default class Booking {
     } else {
       bookingToCreate.isApproved = true;
       bookingToCreate.approvedAtDatetime = new Date();
-      bookingToCreate.approvedBy = booking.organizer;
+      bookingToCreate.approvedById = booking.organizerId;
       bookingToCreate.approverNotes = 'No approval needed. Booking was auto-approved.';
     }
 

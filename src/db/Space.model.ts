@@ -1,16 +1,25 @@
-import type { AvailabilityType, ImageType, PriceType } from '@/commonTypes';
-import type { ObjectId } from 'mongoose';
 import { Schema } from 'mongoose';
-import { modelGetter } from '../util';
-import { AvailabilitySchema, ImageSchema, PriceSchema } from '../commonSchemas';
+import { modelGetter, withTimestampsAndId } from './util';
+import type {
+  AdditionaInfoEntryType,
+  AvailabilityType,
+  CommonSchemaType,
+  FileType,
+  ImageType,
+  PriceType,
+} from './commonSchemas';
+import { AdditionaInfoEntrySchema, AvailabilitySchema, ImageSchema, PriceSchema } from './commonSchemas';
+import { GroupModelName, type GroupType } from './Group.model';
+import { PersonaModelName, type PersonaType } from './Persona.model';
 
-export interface SpaceType {
-  approverGroups: ObjectId[];
-  approverPeople: ObjectId[];
+export type SpaceType = CommonSchemaType<{
+  additionalInfoEntry: AdditionaInfoEntryType[];
+  approverGroupsId: GroupType['id'][];
+  approverPeopleId: PersonaType['id'][];
   availability: AvailabilityType;
   capacity: number;
   description: string;
-  id: ObjectId;
+  files: FileType[];
   images: ImageType[];
   isServicePerHouse: boolean;
   maximumPeoplePerSlot: number;
@@ -21,17 +30,24 @@ export interface SpaceType {
   requiresApproval: boolean;
   requiresBooking: boolean;
   slotsInMinutes: number[];
-}
+}>;
 
 export const SpaceSchema = new Schema<SpaceType>(
   {
-    approverGroups: {
+    additionalInfoEntry: {
       default: [],
+      required: true,
+      type: [AdditionaInfoEntrySchema],
+    },
+    approverGroupsId: {
+      default: [],
+      ref: GroupModelName,
       required: true,
       type: [Schema.Types.ObjectId],
     },
-    approverPeople: {
+    approverPeopleId: {
       default: [],
+      ref: PersonaModelName,
       required: true,
       type: [Schema.Types.ObjectId],
     },
@@ -92,10 +108,8 @@ export const SpaceSchema = new Schema<SpaceType>(
       type: [Number],
     },
   },
-  {
-    id: true,
-    timestamps: true,
-  },
+  withTimestampsAndId({}),
 );
 
-export const getSpaceModel = modelGetter('Space', SpaceSchema);
+export const SpaceModelName = 'Space';
+export const getSpaceModel = modelGetter(SpaceModelName, SpaceSchema);
