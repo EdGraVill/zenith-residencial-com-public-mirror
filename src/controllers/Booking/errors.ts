@@ -1,74 +1,93 @@
-import CustomError from '@/CustomError';
+import CommonError from '@/CommonError';
+import type { BookingType } from '@/db/Booking.model';
+import type { SpaceType } from '@/db/Space.model';
 import { format } from 'date-fns/format';
-import type { ObjectId } from 'mongoose';
 
-export class BookingNotRequired extends CustomError {
-  constructor(spaceId: ObjectId) {
+export class BookingNotFound extends CommonError {
+  constructor(bookingId: BookingType['id']) {
+    super('Booking not found');
+
+    this.name = 'BookingNotFound';
+
+    this.log(`Booking with id ${bookingId} not found`, this);
+  }
+}
+
+export class BookingNotRequired extends CommonError {
+  constructor(spaceId: SpaceType['id']) {
     super('Booking not required');
 
     this.name = 'BookingNotRequired';
 
-    console.info(`${this.prefix}Space with id ${spaceId} does not require booking\n`, this);
+    this.log(`Space with id ${spaceId} does not require booking`, this);
   }
 }
 
-export class SpaceClosed extends CustomError {
-  constructor(spaceId: ObjectId, date: Date) {
+export class SpaceClosed extends CommonError {
+  constructor(spaceId: SpaceType['id'], date: Date) {
     super('Space is closed');
 
     this.name = 'SpaceClosed';
 
-    console.info(`${this.prefix}Space with id ${spaceId} is closed for ${format(date, 'Pp')}\n`, this);
+    this.log(`Space with id ${spaceId} is closed for ${format(date, 'Pp')}`, this);
   }
 }
 
-export class InvalidBookingDuration extends CustomError {
-  constructor(spaceId: ObjectId, bookingStart: Date, bookingEnd: Date) {
+export class InvalidBookingDuration extends CommonError {
+  constructor(spaceId: SpaceType['id'], bookingStart: Date, bookingEnd: Date) {
     super('Invalid booking duration');
 
     this.name = 'InvalidBookingDuration';
 
-    console.info(
-      `${this.prefix}Space with id ${spaceId} does not support booking from ${format(bookingStart, 'Pp')} to ${format(bookingEnd, 'Pp')}\n`,
+    this.log(
+      `Space with id ${spaceId} does not support booking from ${format(bookingStart, 'Pp')} to ${format(bookingEnd, 'Pp')}`,
       this,
     );
   }
 }
 
-export class InvalidBookingTime extends CustomError {
-  constructor(spaceId: ObjectId, bookingStart: Date, bookingEnd: Date) {
+export class InvalidBookingTime extends CommonError {
+  constructor(spaceId: SpaceType['id'], bookingStart: Date, bookingEnd: Date) {
     super('Invalid booking time');
 
     this.name = 'InvalidBookingTime';
 
-    console.info(
-      `${this.prefix}Space with id ${spaceId} does not support booking from ${format(bookingStart, 'Pp')} to ${format(bookingEnd, 'Pp')}\n`,
+    this.log(
+      `Space with id ${spaceId} does not support booking from ${format(bookingStart, 'Pp')} to ${format(bookingEnd, 'Pp')}`,
       this,
     );
   }
 }
 
-export class TooManyPeople extends CustomError {
-  constructor(spaceId: ObjectId, thisBookingPeople: number, alreadyBookedPeople: number, maxPeople: number) {
+export class TooManyPeople extends CommonError {
+  constructor(spaceId: SpaceType['id'], thisBookingPeople: number, alreadyBookedPeople: number, maxPeople: number) {
     super('Too many people');
 
     this.name = 'TooManyPeople';
 
-    console.info(
-      `${this.prefix}Space with id ${spaceId} can't accommodate ${thisBookingPeople} people. Already ${alreadyBookedPeople} people are booked. Maximum people allowed are ${maxPeople}\n`,
+    this.log(
+      `Space with id ${spaceId} can't accommodate ${thisBookingPeople} people. Already ${alreadyBookedPeople} people are booked. Maximum people allowed are ${maxPeople}`,
       this,
     );
   }
 }
 
-export class BookingDbError extends CustomError {
-  constructor(originalError: Error) {
-    super(originalError.message);
+export class BookingAlreadyApproved extends CommonError {
+  constructor(bookingId: BookingType['id'], approverId: BookingType['approvedById']) {
+    super('Booking already approved');
 
-    this.name = 'BookingDbError';
-    this.stack = originalError.stack;
-    this.cause = originalError;
+    this.name = 'BookingAlreadyApproved';
 
-    console.error(`${this.prefix}Booking database error: ${originalError.message}\n`, this);
+    this.log(`Booking with id ${bookingId} was already approved by Persona with id ${approverId}`, this);
+  }
+}
+
+export class BookingAlreadyDeclined extends CommonError {
+  constructor(bookingId: BookingType['id'], declinerId: BookingType['declinedById']) {
+    super('Booking already declined');
+
+    this.name = 'BookingAlreadyDeclined';
+
+    this.log(`Booking with id ${bookingId} was already declined by Persona with id ${declinerId}`, this);
   }
 }

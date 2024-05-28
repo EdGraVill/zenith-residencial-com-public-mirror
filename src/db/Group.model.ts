@@ -1,7 +1,7 @@
 import { Schema } from 'mongoose';
 import type { PersonaType } from './Persona.model';
 import { AccessTypeEnum, PersonaModelName } from './Persona.model';
-import type { CommonSchemaType } from './commonSchemas';
+import { CommonId, type CommonSchemaType } from './commonSchemas';
 import { modelGetter, withTimestampsAndId } from './util';
 
 export type GroupType = CommonSchemaType<{
@@ -22,7 +22,7 @@ export const GroupSchema = new Schema<GroupType>(
       default: [],
       ref: PersonaModelName,
       required: true,
-      type: [Schema.Types.ObjectId],
+      type: [CommonId],
     },
     name: {
       required: true,
@@ -31,7 +31,7 @@ export const GroupSchema = new Schema<GroupType>(
     ownerId: {
       ref: PersonaModelName,
       required: true,
-      type: Schema.Types.ObjectId,
+      type: CommonId,
     },
   },
   withTimestampsAndId({}),

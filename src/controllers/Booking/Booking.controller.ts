@@ -4,7 +4,9 @@ import Space from '../Space/Space.controller';
 import assert from 'assert';
 import { SpaceNotFound } from '../Space/errors';
 import {
-  BookingDbError,
+  BookingAlreadyApproved,
+  BookingAlreadyDeclined,
+  BookingNotFound,
   BookingNotRequired,
   InvalidBookingDuration,
   InvalidBookingTime,
@@ -12,19 +14,32 @@ import {
   TooManyPeople,
 } from './errors';
 import { format } from 'date-fns/format';
-import type { DayOfWeekType } from '@/db/commonSchemas';
+import type { CommonDocumentType, DayOfWeekType } from '@/db/commonSchemas';
 import { differenceInMinutes } from 'date-fns/differenceInMinutes';
 import { isValidStartTime } from '@/timeUtils';
-import type { Document, ObjectId } from 'mongoose';
+import type { PersonaType } from '@/db/Persona.model';
+import { CommonController } from '../CommonControllers';
 
-export default class Booking {
-  public static async book(
+export type BookingDocumentType = CommonDocumentType<BookingType>;
+
+export default class Booking extends CommonController<BookingType> {
+  private static readonly model = getBookingModel();
+
+  public static async getById(id: BookingType['id']) {
+    const booking = await this.dbManipulation(() => this.model.findById<BookingDocumentType>(id));
+
+    assert(booking, new BookingNotFound(id));
+
+    return new Booking(booking);
+  }
+
+  public static async create(
     booking: Pick<
       BookingType,
-      'bookingEnd' | 'bookingStart' | 'extraPeople' | 'houseId' | 'notes' | 'organizer' | 'spaceId'
+      'bookingEnd' | 'bookingStart' | 'extraPeopleId' | 'houseId' | 'notes' | 'organizerId' | 'spaceId'
     >,
   ) {
-    const space = await Space.findById(booking.spaceId);
+    const space = await Space.getById(booking.spaceId);
 
     assert(space, new SpaceNotFound(booking.spaceId));
     assert(space.getValue('requiresBooking'), new BookingNotRequired(booking.spaceId));
@@ -69,12 +84,10 @@ export default class Booking {
       new InvalidBookingTime(booking.spaceId, booking.bookingStart, booking.bookingEnd),
     );
 
-    const bookingModel = getBookingModel();
+    const BookingModel = getBookingModel();
 
-    let booksInsideSlot: Document<ObjectId, Record<never, never>, BookingType>[] = [];
-
-    try {
-      booksInsideSlot = await bookingModel.find({
+    const booksInsideSlot: CommonDocumentType<BookingType>[] = await this.dbManipulation(() =>
+      BookingModel.find({
         $and: [
           { spaceId: booking.spaceId },
           { isApproved: true },
@@ -85,10 +98,8 @@ export default class Booking {
             ],
           },
         ],
-      });
-    } catch (error) {
-      throw new BookingDbError(error as Error);
-    }
+      }),
+    );
 
     const totalPeople = booking.extraPeopleId.length + 1;
     const alreadyBookedPeople = booksInsideSlot.reduce((acc, book) => acc + book.get('extraPeople').length + 1, 0);
@@ -113,12 +124,35 @@ export default class Booking {
       bookingToCreate.approverNotes = 'No approval needed. Booking was auto-approved.';
     }
 
-    try {
-      const result = await bookingModel.create(bookingToCreate);
-
-      return result;
-    } catch (error) {
-      throw new BookingDbError(error as Error);
-    }
+    return this.dbManipulation(() => BookingModel.create(bookingToCreate));
   }
+
+  public approve(approverId: PersonaType['id'], notes: string) {
+    // TODO: Implement validate approverId and permissions
+
+    assert(!this.getValue('isApproved'), new BookingAlreadyApproved(this.id, this.getValue('approvedById')));
+    assert(!this.getValue('isDeclined'), new BookingAlreadyDeclined(this.id, this.getValue('declinedById')));
+
+    return this.update({
+      approvedAtDatetime: new Date(),
+      approvedById: approverId,
+      approverNotes: notes,
+      isApproved: true,
+    });
+  }
+
+  public decline(declinerId: PersonaType['id'], notes: string) {
+    // TODO: Implement validate approverId and permissions (Can self decline)
+
+    assert(!this.getValue('isDeclined'), new BookingAlreadyDeclined(this.id, this.getValue('declinedById')));
+
+    return this.update({
+      declinedAtDatetime: new Date(),
+      declinedById: declinerId,
+      declinerNotes: notes,
+      isDeclined: true,
+    });
+  }
+
+  public cancel = this.decline;
 }

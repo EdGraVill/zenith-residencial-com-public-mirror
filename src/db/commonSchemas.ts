@@ -1,12 +1,15 @@
 import type { UUIDType } from '@/commonTypes';
 import { isValideTime, type TimeType } from '@/timeUtils';
 import { randomUUID } from 'crypto';
-import type { ObjectId } from 'mongoose';
+import type { Document, Model, ObjectId } from 'mongoose';
 import { Schema } from 'mongoose';
 import { withTimestampsAndId } from './util';
 
+export type CommonIdType = ObjectId;
+export const CommonId = Schema.Types.ObjectId;
+
 export type CommonSchemaType<S> = {
-  id: ObjectId;
+  id: CommonIdType;
   timestamps: {
     createdAt: Date;
     updatedAt: Date;
@@ -332,3 +335,5 @@ export const AdditionaInfoEntrySchema = new Schema({
     type: String,
   },
 });
+
+export type CommonDocumentType<S> = Document<CommonIdType, Record<never, never>, S> & S;

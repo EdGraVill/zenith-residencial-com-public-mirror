@@ -8,7 +8,7 @@ import type {
   ImageType,
   PriceType,
 } from './commonSchemas';
-import { AdditionaInfoEntrySchema, AvailabilitySchema, ImageSchema, PriceSchema } from './commonSchemas';
+import { AdditionaInfoEntrySchema, AvailabilitySchema, CommonId, ImageSchema, PriceSchema } from './commonSchemas';
 import { GroupModelName, type GroupType } from './Group.model';
 import { PersonaModelName, type PersonaType } from './Persona.model';
 
@@ -43,13 +43,13 @@ export const SpaceSchema = new Schema<SpaceType>(
       default: [],
       ref: GroupModelName,
       required: true,
-      type: [Schema.Types.ObjectId],
+      type: [CommonId],
     },
     approverPeopleId: {
       default: [],
       ref: PersonaModelName,
       required: true,
-      type: [Schema.Types.ObjectId],
+      type: [CommonId],
     },
     availability: {
       required: true,

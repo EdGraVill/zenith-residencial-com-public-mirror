@@ -1,8 +1,8 @@
-import type { ObjectId } from 'mongoose';
 import { Schema } from 'mongoose';
 import { PersonaModelName, type PersonaType } from './Persona.model';
 import {
   AdditionaInfoEntrySchema,
+  CommonId,
   FileSchema,
   ImageSchema,
   type AdditionaInfoEntryType,
@@ -54,10 +54,10 @@ export const VehicleSchema = new Schema<VehicleType>(
     },
     pictureId: {
       required: true,
-      type: Schema.Types.ObjectId,
+      type: CommonId,
       validate: {
         message: 'Image does not exist',
-        validator(this: VehicleType, value: ObjectId) {
+        validator(this: VehicleType, value: ImageType['id']) {
           if (!this.images.some((image) => image.id === value)) {
             return false;
           }
@@ -113,10 +113,10 @@ export const PetSchema = new Schema<PetTyoe>(
     },
     pictureId: {
       required: true,
-      type: Schema.Types.ObjectId,
+      type: CommonId,
       validate: {
         message: 'Image does not exist',
-        validator(this: PetTyoe, value: ObjectId) {
+        validator(this: PetTyoe, value: ImageType['id']) {
           if (!this.images.some((image) => image.id === value)) {
             return false;
           }
@@ -179,25 +179,25 @@ export const HouseSchema = new Schema<HouseType>(
       default: [],
       ref: PersonaModelName,
       required: true,
-      type: [Schema.Types.ObjectId],
+      type: [CommonId],
     },
     callToApproveOrderId: {
       default: [],
       ref: PersonaModelName,
       required: true,
-      type: [Schema.Types.ObjectId],
+      type: [CommonId],
     },
     disallowedToApproveId: {
       default: [],
       ref: PersonaModelName,
       required: true,
-      type: [Schema.Types.ObjectId],
+      type: [CommonId],
     },
     disallowedToBookId: {
       default: [],
       ref: PersonaModelName,
       required: true,
-      type: [Schema.Types.ObjectId],
+      type: [CommonId],
     },
     files: {
       default: [],
@@ -220,13 +220,13 @@ export const HouseSchema = new Schema<HouseType>(
     ownerId: {
       ref: PersonaModelName,
       required: true,
-      type: Schema.Types.ObjectId,
+      type: CommonId,
     },
     peopleId: {
       default: [],
       ref: PersonaModelName,
       required: true,
-      type: [Schema.Types.ObjectId],
+      type: [CommonId],
     },
     permanentNotes: {
       default: [],
@@ -250,7 +250,7 @@ export const HouseSchema = new Schema<HouseType>(
     },
     tenantId: {
       ref: PersonaModelName,
-      type: Schema.Types.ObjectId,
+      type: CommonId,
     },
     vehicles: {
       default: [],

@@ -1,6 +1,6 @@
-import { Schema, Types } from 'mongoose';
+import { Schema } from 'mongoose';
 import { modelGetter, withTimestampsAndId } from './util';
-import type { CommonSchemaType } from './commonSchemas';
+import { CommonId, type CommonSchemaType } from './commonSchemas';
 import { PersonaModelName, type PersonaType } from './Persona.model';
 import { HouseModelName, type HouseType } from './House.model';
 import { SpaceModelName, type SpaceType } from './Space.model';
@@ -11,9 +11,13 @@ export type BookingType = CommonSchemaType<{
   approverNotes?: string;
   bookingEnd: Date;
   bookingStart: Date;
+  declinedAtDatetime?: Date;
+  declinedById?: PersonaType['id'];
+  declinerNotes?: string;
   extraPeopleId: PersonaType['id'][];
   houseId: HouseType['id'];
   isApproved: boolean;
+  isDeclined?: boolean;
   notes?: string;
   organizerId: PersonaType['id'];
   spaceId: SpaceType['id'];
@@ -26,7 +30,7 @@ export const BookingSchema = new Schema<BookingType>(
     },
     approvedById: {
       ref: PersonaModelName,
-      type: Types.ObjectId,
+      type: CommonId,
     },
     approverNotes: {
       type: String,
@@ -39,19 +43,32 @@ export const BookingSchema = new Schema<BookingType>(
       required: true,
       type: Date,
     },
+    declinedAtDatetime: {
+      type: Date,
+    },
+    declinedById: {
+      ref: PersonaModelName,
+      type: CommonId,
+    },
+    declinerNotes: {
+      type: String,
+    },
     extraPeopleId: {
       default: [],
       ref: PersonaModelName,
-      type: [Types.ObjectId],
+      type: [CommonId],
     },
     houseId: {
       ref: HouseModelName,
       required: true,
-      type: Types.ObjectId,
+      type: CommonId,
     },
     isApproved: {
       default: false,
       required: true,
+      type: Boolean,
+    },
+    isDeclined: {
       type: Boolean,
     },
     notes: {
@@ -60,12 +77,12 @@ export const BookingSchema = new Schema<BookingType>(
     organizerId: {
       ref: PersonaModelName,
       required: true,
-      type: Types.ObjectId,
+      type: CommonId,
     },
     spaceId: {
       ref: SpaceModelName,
       required: true,
-      type: Types.ObjectId,
+      type: CommonId,
     },
   },
   withTimestampsAndId({}),

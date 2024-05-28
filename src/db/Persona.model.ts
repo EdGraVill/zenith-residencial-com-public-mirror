@@ -1,6 +1,7 @@
 import { Schema } from 'mongoose';
 import {
   AdditionaInfoEntrySchema,
+  CommonId,
   FileSchema,
   ImageSchema,
   type AdditionaInfoEntryType,
@@ -165,10 +166,10 @@ export const PersonaSchema = new Schema<PersonaType>(
       type: String,
     },
     profilePictureId: {
-      type: Schema.Types.ObjectId,
+      type: CommonId,
       validate: {
         message: 'Image does not exist',
-        validator(this: PersonaType, value: Schema.Types.ObjectId) {
+        validator(this: PersonaType, value: ImageType['id']) {
           if (!this.images.some((image) => image.id === value)) {
             return false;
           }

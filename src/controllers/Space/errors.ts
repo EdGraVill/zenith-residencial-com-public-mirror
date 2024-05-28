@@ -1,34 +1,23 @@
-import CustomError from '@/CustomError';
-import type { ObjectId } from 'mongoose';
+import CommonError from '@/CommonError';
+import type { UUIDType } from '@/commonTypes';
+import type { SpaceType } from '@/db/Space.model';
 
-export class SpaceNotFound extends CustomError {
-  constructor(id: ObjectId) {
+export class SpaceNotFound extends CommonError {
+  constructor(spaceId: SpaceType['id']) {
     super('Space not found');
 
     this.name = 'SpaceNotFound';
 
-    console.info(`${this.prefix}Space with id ${id} not found\n`, this);
+    this.log(`Space with id ${spaceId} not found`, this);
   }
 }
 
-export class SpaceImageNotFound extends CustomError {
-  constructor(spaceId: ObjectId, imageUUID: string) {
+export class SpaceImageNotFound extends CommonError {
+  constructor(spaceId: SpaceType['id'], imageUUID: UUIDType) {
     super('Space image not found');
 
     this.name = 'SpaceImageNotFound';
 
-    console.info(`${this.prefix}Space with id ${spaceId} does not have an image with UUID ${imageUUID}\n`, this);
-  }
-}
-
-export class SpaceDbError extends CustomError {
-  constructor(originalError: Error) {
-    super(originalError.message);
-
-    this.name = 'SpaceDbError';
-    this.stack = originalError.stack;
-    this.cause = originalError;
-
-    console.error(`${this.prefix}Space database error: ${originalError.message}\n`, this);
+    this.log(`Space with id ${spaceId} does not have an image with UUID ${imageUUID}`, this);
   }
 }
