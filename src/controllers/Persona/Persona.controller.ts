@@ -40,10 +40,18 @@ export default class Persona extends CommonController<PersonaType> {
     return new Persona(persona);
   }
 
-  public static async getWithCurrentSession() {
+  public static async getWithCurrentSession(fail = true) {
     const session = await getServerSession(authOptions);
 
-    assert(session?.user?.email, new SessionNotFound());
+    if (fail) {
+      assert(session?.user?.email, new SessionNotFound());
+
+      return this.getByEmail(session.user.email);
+    }
+
+    if (!session?.user?.email) {
+      return null;
+    }
 
     return this.getByEmail(session.user.email);
   }

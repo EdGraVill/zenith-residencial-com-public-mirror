@@ -1,6 +1,20 @@
 import mongoose from 'mongoose';
 import type { SchemaOptions, Schema } from 'mongoose';
 
+let storedConnection: typeof mongoose | null = null;
+
+export async function connectDB() {
+  if (!storedConnection) {
+    storedConnection = await mongoose.connect(process.env.MONGODB_URI ?? '', {});
+  }
+
+  if (storedConnection.connection.readyState !== 1) {
+    storedConnection = await mongoose.connect(process.env.MONGODB_URI ?? '', {});
+  }
+
+  return storedConnection;
+}
+
 const schemas: Record<string, Schema> = {};
 
 export const modelGetter =
@@ -11,8 +25,6 @@ export const modelGetter =
 
       // This will help for development & testing process
       delete mongoose.models[modelName];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (mongoose as any).modelSchemas[modelName];
 
       Object.keys(schemas).forEach((mn) => {
         mongoose.model(mn, schemas[mn]);

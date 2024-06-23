@@ -2,10 +2,11 @@ import type { CommonDocumentType, CommonIdType, FileType, ImageType } from '@/db
 import { CommonDbError, FileNotFound, ImageNotFound } from './commonErrors';
 import { produce } from 'immer';
 import assert from 'assert';
+import { connectDB } from '@/db/util';
 
 export class CommonController<T extends { id: CommonIdType }> {
-  protected static dbManipulation<T>(tryFn: () => Promise<T>): Promise<T> {
-    // TODO: Check db vitals
+  protected static async dbManipulation<T>(tryFn: () => Promise<T>): Promise<T> {
+    await connectDB();
 
     try {
       return tryFn();
@@ -18,8 +19,8 @@ export class CommonController<T extends { id: CommonIdType }> {
 
   constructor(protected readonly document: CommonDocumentType<T>) {}
 
-  protected dbManipulation<T>(tryFn: () => Promise<T>): Promise<T> {
-    // TODO: Check db vitals
+  protected async dbManipulation<T>(tryFn: () => Promise<T>): Promise<T> {
+    await connectDB();
 
     try {
       return tryFn();
