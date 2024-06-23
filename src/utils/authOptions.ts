@@ -39,9 +39,9 @@ export default {
   },
   providers: [
     GoogleProvider({
-      clientId: '',
-      clientSecret: '',
+      clientId: process.env.GOOGLE_OAUTH_CLIENT_ID ?? '',
+      clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET ?? '',
     }),
   ],
-  secret: '',
+  secret: process.env.NEXTAUTH_SECRET,
 } as AuthOptions;
