@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: 'Zenith Residencial',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

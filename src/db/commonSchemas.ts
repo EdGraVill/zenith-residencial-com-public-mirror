@@ -1,7 +1,7 @@
 import type { UUIDType } from '@/commonTypes';
 import { isValideTime, type TimeType } from '@/timeUtils';
 import { randomUUID } from 'crypto';
-import type { Document, Model, ObjectId } from 'mongoose';
+import type { Document, ObjectId } from 'mongoose';
 import { Schema } from 'mongoose';
 import { withTimestampsAndId } from './util';
 

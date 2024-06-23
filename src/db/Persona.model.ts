@@ -24,6 +24,7 @@ export enum AccessTypeEnum {
   CREATOR = 'CREATOR',
   DEMO = 'DEMO',
   DEVELOPER = 'DEVELOPER',
+  ON_HOLD = 'ON_HOLD',
   RESIDENT = 'RESIDENT',
   TENANT = 'TENANT',
   TESTER = 'TESTER',
@@ -84,8 +85,8 @@ export type PersonaType = CommonSchemaType<{
   password?: string;
   phoneNumbers: string[];
   primaryAuthMethod: LoginTypeEnum;
-  primaryEmailAddress: string;
-  primaryPhoneNumber: string;
+  primaryEmailAddress?: string;
+  primaryPhoneNumber?: string;
   profilePictureId?: ImageType['id'];
   sharedInfo: PersonaSharableInfoEnum[];
 }>;
@@ -158,11 +159,9 @@ export const PersonaSchema = new Schema<PersonaType>(
       type: String,
     },
     primaryEmailAddress: {
-      required: true,
       type: String,
     },
     primaryPhoneNumber: {
-      required: true,
       type: String,
     },
     profilePictureId: {
