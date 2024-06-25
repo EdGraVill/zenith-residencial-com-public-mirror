@@ -1,11 +1,11 @@
 import type { UUIDType } from '@/commonTypes';
 import { isValideTime, type TimeType } from '@/timeUtils';
 import { randomUUID } from 'crypto';
-import type { Document, ObjectId } from 'mongoose';
+import type { Document, Types } from 'mongoose';
 import { Schema } from 'mongoose';
 import { withTimestampsAndId } from './util';
 
-export type CommonIdType = ObjectId;
+export type CommonIdType = Types.ObjectId;
 export const CommonId = Schema.Types.ObjectId;
 
 export type CommonSchemaType<S> = {
@@ -146,9 +146,10 @@ export type ImageType = CommonSchemaType<{
   name: string;
   sizeInBytes: number;
   thumbnail: ThumbnailType;
-  url1x: string;
-  url2x: string;
-  url3x: string;
+  url: string;
+  url1x?: string;
+  url2x?: string;
+  url3x?: string;
   uuid: UUIDType;
   width: number;
 }>;
@@ -184,16 +185,100 @@ export const ImageSchema = new Schema<ImageType>(
       required: true,
       type: ThumbnailSchema,
     },
-    url1x: {
+    url: {
       required: true,
+      type: String,
+    },
+    url1x: {
       type: String,
     },
     url2x: {
-      required: true,
       type: String,
     },
     url3x: {
+      type: String,
+    },
+    uuid: {
+      default: () => randomUUID(),
       required: true,
+      type: String,
+    },
+    width: {
+      required: true,
+      type: Number,
+    },
+  },
+  withTimestampsAndId({}),
+);
+
+export type VideoType = CommonSchemaType<{
+  codec: string;
+  description: string;
+  format: string;
+  height: number;
+  isInTrash: boolean;
+  mimeType: string;
+  name: string;
+  sizeInBytes: number;
+  thumbnail: ThumbnailType;
+  url: string;
+  urlHD?: string;
+  urlQHD?: string;
+  urlSD?: string;
+  uuid: UUIDType;
+  width: number;
+}>;
+
+export const VideoSchema = new Schema<VideoType>(
+  {
+    codec: {
+      required: true,
+      type: String,
+    },
+    description: {
+      required: true,
+      type: String,
+    },
+    format: {
+      required: true,
+      type: String,
+    },
+    height: {
+      required: true,
+      type: Number,
+    },
+    isInTrash: {
+      default: false,
+      required: true,
+      type: Boolean,
+    },
+    mimeType: {
+      required: true,
+      type: String,
+    },
+    name: {
+      required: true,
+      type: String,
+    },
+    sizeInBytes: {
+      required: true,
+      type: Number,
+    },
+    thumbnail: {
+      required: true,
+      type: ThumbnailSchema,
+    },
+    url: {
+      required: true,
+      type: String,
+    },
+    urlHD: {
+      type: String,
+    },
+    urlQHD: {
+      type: String,
+    },
+    urlSD: {
       type: String,
     },
     uuid: {

@@ -1,10 +1,10 @@
 import type { SpaceType } from '@/db/Space.model';
 import { getSpaceModel } from '@/db/Space.model';
 import { SpaceNotFound } from './errors';
-import assert from 'assert';
 import type { CommonDocumentType, CommonIdType, ImageType } from '@/db/commonSchemas';
 import { CommonControllerWithFilesAndImages } from '../CommonControllers';
 import type { PersonaType } from '@/db/Persona.model';
+import assert from '@/utils/assert';
 
 export type SpaceDocumentType = CommonDocumentType<SpaceType>;
 
@@ -14,7 +14,7 @@ export default class Space extends CommonControllerWithFilesAndImages<SpaceType>
   public static async getById(id: CommonIdType) {
     const space = await this.dbManipulation(() => this.model.findById<SpaceDocumentType>(id));
 
-    assert(space, new SpaceNotFound(id));
+    assert(space, () => new SpaceNotFound(id));
 
     return new Space(space);
   }

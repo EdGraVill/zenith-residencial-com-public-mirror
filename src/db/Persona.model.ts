@@ -26,6 +26,8 @@ export enum AccessTypeEnum {
   DEVELOPER = 'DEVELOPER',
   ON_HOLD = 'ON_HOLD',
   RESIDENT = 'RESIDENT',
+  SALES = 'SALES',
+  SUPPORT = 'SUPPORT',
   TENANT = 'TENANT',
   TESTER = 'TESTER',
   VISITOR = 'VISITOR',

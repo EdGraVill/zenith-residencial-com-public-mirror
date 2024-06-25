@@ -1,7 +1,6 @@
 import type { BookingType } from '@/db/Booking.model';
 import { getBookingModel } from '@/db/Booking.model';
 import Space from '../Space/Space.controller';
-import assert from 'assert';
 import { SpaceNotFound } from '../Space/errors';
 import {
   BookingAlreadyApproved,
@@ -19,6 +18,7 @@ import { differenceInMinutes } from 'date-fns/differenceInMinutes';
 import { isValidStartTime } from '@/timeUtils';
 import type { PersonaType } from '@/db/Persona.model';
 import { CommonController } from '../CommonControllers';
+import assert from '@/utils/assert';
 
 export type BookingDocumentType = CommonDocumentType<BookingType>;
 
@@ -28,7 +28,7 @@ export default class Booking extends CommonController<BookingType> {
   public static async getById(id: BookingType['id']) {
     const booking = await this.dbManipulation(() => this.model.findById<BookingDocumentType>(id));
 
-    assert(booking, new BookingNotFound(id));
+    assert(booking, () => new BookingNotFound(id));
 
     return new Booking(booking);
   }
@@ -41,32 +41,32 @@ export default class Booking extends CommonController<BookingType> {
   ) {
     const space = await Space.getById(booking.spaceId);
 
-    assert(space, new SpaceNotFound(booking.spaceId));
-    assert(space.getValue('requiresBooking'), new BookingNotRequired(booking.spaceId));
+    assert(space, () => new SpaceNotFound(booking.spaceId));
+    assert(space.getValue('requiresBooking'), () => new BookingNotRequired(booking.spaceId));
 
     const dateOfBookingInYYYYMMDD = format(booking.bookingStart, 'yyyy-MM-dd');
 
     assert(
       !space.getValue('availability').closedInYYYYMMDD.includes(dateOfBookingInYYYYMMDD),
-      new SpaceClosed(booking.spaceId, booking.bookingStart),
+      () => new SpaceClosed(booking.spaceId, booking.bookingStart),
     );
 
     const spaceAvailability = space.getValue('availability');
     const bookingDayOfWeek = format(booking.bookingStart, 'EEEE').toLowerCase() as DayOfWeekType;
     const currentAvailabilityDay = spaceAvailability[bookingDayOfWeek];
 
-    assert(currentAvailabilityDay.length, new SpaceClosed(booking.spaceId, booking.bookingStart));
+    assert(currentAvailabilityDay.length, () => new SpaceClosed(booking.spaceId, booking.bookingStart));
 
     const bookingDurationInMinutes = differenceInMinutes(booking.bookingEnd, booking.bookingStart);
 
     assert(
       bookingDurationInMinutes > 0,
-      new InvalidBookingDuration(booking.spaceId, booking.bookingStart, booking.bookingEnd),
+      () => new InvalidBookingDuration(booking.spaceId, booking.bookingStart, booking.bookingEnd),
     );
 
     assert(
       space.getValue('slotsInMinutes').includes(bookingDurationInMinutes),
-      new InvalidBookingDuration(booking.spaceId, booking.bookingStart, booking.bookingEnd),
+      () => new InvalidBookingDuration(booking.spaceId, booking.bookingStart, booking.bookingEnd),
     );
 
     const availabilities = currentAvailabilityDay.map(({ from, to, timezone }) => ({
@@ -76,18 +76,16 @@ export default class Booking extends CommonController<BookingType> {
 
     assert(
       availabilities.some(({ start, end }) => booking.bookingStart >= start && booking.bookingEnd <= end),
-      new InvalidBookingTime(booking.spaceId, booking.bookingStart, booking.bookingEnd),
+      () => new InvalidBookingTime(booking.spaceId, booking.bookingStart, booking.bookingEnd),
     );
 
     assert(
       isValidStartTime(availabilities, Math.min(...space.getValue('slotsInMinutes')), booking.bookingStart),
-      new InvalidBookingTime(booking.spaceId, booking.bookingStart, booking.bookingEnd),
+      () => new InvalidBookingTime(booking.spaceId, booking.bookingStart, booking.bookingEnd),
     );
 
-    const BookingModel = getBookingModel();
-
     const booksInsideSlot: CommonDocumentType<BookingType>[] = await this.dbManipulation(() =>
-      BookingModel.find({
+      this.model.find({
         $and: [
           { spaceId: booking.spaceId },
           { isApproved: true },
@@ -106,7 +104,8 @@ export default class Booking extends CommonController<BookingType> {
 
     assert(
       totalPeople + alreadyBookedPeople <= space.getValue('maximumPeoplePerSlot'),
-      new TooManyPeople(booking.spaceId, totalPeople, alreadyBookedPeople, space.getValue('maximumPeoplePerSlot')),
+      () =>
+        new TooManyPeople(booking.spaceId, totalPeople, alreadyBookedPeople, space.getValue('maximumPeoplePerSlot')),
     );
 
     const requiresApproval = space.getValue('requiresApproval');
@@ -124,14 +123,16 @@ export default class Booking extends CommonController<BookingType> {
       bookingToCreate.approverNotes = 'No approval needed. Booking was auto-approved.';
     }
 
-    return this.dbManipulation(() => BookingModel.create(bookingToCreate));
+    const newBooking = await this.dbManipulation(() => this.model.create(bookingToCreate));
+
+    return new Booking(newBooking as unknown as BookingDocumentType);
   }
 
   public approve(approverId: PersonaType['id'], notes: string) {
     // TODO: Implement validate approverId and permissions
 
-    assert(!this.getValue('isApproved'), new BookingAlreadyApproved(this.id, this.getValue('approvedById')));
-    assert(!this.getValue('isDeclined'), new BookingAlreadyDeclined(this.id, this.getValue('declinedById')));
+    assert(!this.getValue('isApproved'), () => new BookingAlreadyApproved(this.id, this.getValue('approvedById')));
+    assert(!this.getValue('isDeclined'), () => new BookingAlreadyDeclined(this.id, this.getValue('declinedById')));
 
     return this.update({
       approvedAtDatetime: new Date(),
@@ -144,7 +145,7 @@ export default class Booking extends CommonController<BookingType> {
   public decline(declinerId: PersonaType['id'], notes: string) {
     // TODO: Implement validate approverId and permissions (Can self decline)
 
-    assert(!this.getValue('isDeclined'), new BookingAlreadyDeclined(this.id, this.getValue('declinedById')));
+    assert(!this.getValue('isDeclined'), () => new BookingAlreadyDeclined(this.id, this.getValue('declinedById')));
 
     return this.update({
       declinedAtDatetime: new Date(),

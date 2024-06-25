@@ -21,6 +21,7 @@ export type SpaceType = CommonSchemaType<{
   description: string;
   files: FileType[];
   images: ImageType[];
+  isAmenity: boolean;
   isServicePerHouse: boolean;
   maximumPeoplePerSlot: number;
   maximumTimePerPersonInMinutes: number;
@@ -67,6 +68,11 @@ export const SpaceSchema = new Schema<SpaceType>(
       default: [],
       required: true,
       type: [ImageSchema],
+    },
+    isAmenity: {
+      default: true,
+      required: true,
+      type: Boolean,
     },
     isServicePerHouse: {
       required: true,

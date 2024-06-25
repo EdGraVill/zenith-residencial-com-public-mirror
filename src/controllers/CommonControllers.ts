@@ -1,8 +1,8 @@
 import type { CommonDocumentType, CommonIdType, FileType, ImageType } from '@/db/commonSchemas';
 import { CommonDbError, FileNotFound, ImageNotFound } from './commonErrors';
 import { produce } from 'immer';
-import assert from 'assert';
 import { connectDB } from '@/db/util';
+import assert from '@/utils/assert';
 
 export class CommonController<T extends { id: CommonIdType }> {
   protected static async dbManipulation<T>(tryFn: () => Promise<T>): Promise<T> {
@@ -54,6 +54,10 @@ export class CommonController<T extends { id: CommonIdType }> {
   public delete() {
     return this.dbManipulation(() => this.document.deleteOne());
   }
+
+  public toJSON() {
+    return this.document.toJSON();
+  }
 }
 
 export class CommonControllerWithFilesAndImages<
@@ -78,7 +82,7 @@ export class CommonControllerWithFilesAndImages<
 
     const file = files.find((file) => file.id === fileId);
 
-    assert(file, new FileNotFound(fileId));
+    assert(file, () => new FileNotFound(fileId));
 
     return file;
   }
@@ -112,7 +116,7 @@ export class CommonControllerWithFilesAndImages<
 
     const image = images.find((image) => image.id === imageId);
 
-    assert(image, new ImageNotFound(imageId));
+    assert(image, () => new ImageNotFound(imageId));
 
     return image;
   }

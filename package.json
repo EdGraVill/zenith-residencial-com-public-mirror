@@ -19,7 +19,9 @@
     "next": "14.2.3",
     "next-auth": "^4.24.7",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "yn": "^5.0.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@apptoolkit/eslint-config": "^0.3.0",
