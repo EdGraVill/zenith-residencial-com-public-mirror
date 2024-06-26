@@ -1,3 +1,4 @@
+import LeftAside from '@/components/UI/layouts/LeftAside';
 import Condo from '@/controllers/Condo';
 import { Types } from 'mongoose';
 import { redirect } from 'next/navigation';
@@ -24,7 +25,7 @@ const CondoDetails: FC<Props> = async ({ params }) => {
 
   return (
     <div>
-      <h1>Condo Details</h1>
+      <LeftAside.Title>{condo.getValue('name')}</LeftAside.Title>
       <p>Condo ID: {params.condoId}</p>
       <pre>Condo: {JSON.stringify(condo.toJSON(), undefined, 2)}</pre>
     </div>
