@@ -15,7 +15,7 @@ const AdminLayout: FC<LayoutProps> = async ({ children }) => {
       <LeftAside.Aside>
         <VerticalNavbar accessType={persona.getValue('accessType')} />
       </LeftAside.Aside>
-      <LeftAside.Section>{children}</LeftAside.Section>
+      {children}
     </LeftAside>
   );
 };

@@ -10,10 +10,10 @@ const Heading: FC<Props> = ({ as: Component, className, ...props }) => {
   return (
     <Component
       className={twMerge(
-        className,
         cn('', {
           'py-2 text-2xl font-bold': Component === 'h1',
         }),
+        className,
       )}
       {...props}
     />

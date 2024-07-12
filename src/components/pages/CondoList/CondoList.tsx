@@ -7,8 +7,7 @@ const CondoList: FC = async () => {
   const list = await Condo.getList();
 
   return (
-    <>
-      <LeftAside.Title>Condominios</LeftAside.Title>
+    <LeftAside.Section title="Condominios">
       <ul className="flex w-full flex-col items-stretch">
         {list.map((condo) => (
           <li className="block w-full" key={condo.id.toString()}>
@@ -21,7 +20,7 @@ const CondoList: FC = async () => {
           </li>
         ))}
       </ul>
-    </>
+    </LeftAside.Section>
   );
 };
 

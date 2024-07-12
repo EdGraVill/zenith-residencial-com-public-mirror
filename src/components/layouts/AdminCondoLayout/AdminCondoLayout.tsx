@@ -8,7 +8,7 @@ const AdminCondoLayout: FC<LayoutProps> = async ({ children }) => {
 
   persona.hasAccessOrRedirect(adminCondoAccess);
 
-  return <>{children}</>;
+  return children as JSX.Element;
 };
 
 export default AdminCondoLayout;

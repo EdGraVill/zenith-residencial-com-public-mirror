@@ -5,7 +5,7 @@ interface Props extends PropsWithChildren {
 }
 
 const Aside: FC<Props> = ({ children }) => {
-  return <aside className="col-span-2 row-start-2 rounded-lg bg-white py-4 shadow-sm">{children}</aside>;
+  return <aside className="col-span-3 row-start-2 rounded-lg bg-white py-4 shadow-sm">{children}</aside>;
 };
 
 export default Aside;
