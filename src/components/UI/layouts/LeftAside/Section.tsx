@@ -14,7 +14,7 @@ const Section: FC<Props> = ({ children, title }) => {
           {title}
         </Heading>
       )}
-      <section className="col-span-9 row-start-2 rounded-lg bg-white py-4 shadow-sm">{children}</section>
+      <section className="col-span-9 row-start-2 rounded-lg bg-white shadow-sm">{children}</section>
     </>
   );
 };

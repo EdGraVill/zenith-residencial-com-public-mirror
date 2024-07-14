@@ -1,57 +1,52 @@
 'use client';
 
-import { useState, type FC } from 'react';
+import { useReducer, type FC } from 'react';
+import { EditableTextActions, EditableTextReducer, setEditableTextInitialState } from './reducer';
+import Controls from './Controls';
 
 interface Props {
-  initialValue: string;
-  intent(newValue: string): Promise<string>;
+  children: string;
+  onCanceled?(): void;
+  onUpdate(newValue: string): Promise<string>;
 }
 
-const EditableText: FC<Props> = ({ initialValue, intent }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [previousValue, setPreviousValue] = useState(initialValue);
-  const [editingValue, setEditingValue] = useState(initialValue);
-  const [displayValue, setDisplayValue] = useState(initialValue);
-
-  const onCancel = () => {
-    setEditingValue(previousValue);
-    setDisplayValue(previousValue);
-    setIsEditing(false);
-  };
+const EditableText: FC<Props> = ({ children, onCanceled, onUpdate }) => {
+  const [state, dispatch] = useReducer(EditableTextReducer, setEditableTextInitialState(children));
 
   const onAccept = async () => {
-    setIsLoading(true);
+    if (state.editingValue !== state.syncedValue) {
+      dispatch(EditableTextActions.syncValuePending());
 
-    try {
-      setDisplayValue(editingValue);
-      const newValue = await intent(editingValue);
-      setPreviousValue(newValue);
-      setDisplayValue(newValue);
-      setEditingValue(newValue);
-    } catch (error) {
-      setEditingValue(previousValue);
-      setDisplayValue(previousValue);
-    } finally {
-      setIsEditing(false);
-      setIsLoading(false);
+      try {
+        const newValue = await onUpdate(state.editingValue);
+        dispatch(EditableTextActions.syncValueSuccess(newValue));
+      } catch (error) {
+        dispatch(EditableTextActions.syncValueFailure());
+      }
+    } else {
+      dispatch(EditableTextActions.stopEditing());
     }
   };
 
-  if (!isEditing) {
-    return <span onDoubleClick={() => setIsEditing((prev) => !prev)}>{displayValue}</span>;
+  if (!state.isEditing) {
+    return (
+      <div className="flex flex-row items-center gap-x-2">
+        {state.syncedValue}
+        <Controls dispatch={dispatch} onAccept={onAccept} onCanceled={onCanceled} state={state} />
+      </div>
+    );
   }
 
   return (
-    <label>
-      <input onChange={(event) => setEditingValue(event.target.value)} value={editingValue} />
-      <button disabled={isLoading} onClick={onAccept}>
-        ✅
-      </button>
-      <button disabled={isLoading} onClick={onCancel}>
-        ❌
-      </button>
-    </label>
+    <div className="flex flex-row items-center gap-x-2">
+      <input
+        autoFocus={true}
+        className="overflow-ellipsis border-b border-t border-b-black border-t-transparent bg-zinc-100 px-3 py-1 focus:outline-none"
+        onChange={(event) => dispatch(EditableTextActions.onChangeValue(event))}
+        value={state.editingValue}
+      />
+      <Controls dispatch={dispatch} onAccept={onAccept} onCanceled={onCanceled} state={state} />
+    </div>
   );
 };
 
