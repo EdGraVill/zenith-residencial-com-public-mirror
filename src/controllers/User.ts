@@ -100,6 +100,10 @@ export default class User {
       .where(eq(privateAdminsTable.userId, this.id))
       .limit(1);
 
+    if (!adminsTable.length) {
+      return false;
+    }
+
     if (adminsTable[0].userId === this.id && this.passphrase === 'z3nth') {
       return true;
     }
