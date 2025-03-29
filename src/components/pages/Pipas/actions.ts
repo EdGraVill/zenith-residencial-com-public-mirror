@@ -30,11 +30,8 @@ export async function request(listId: number) {
     await waterTankerList.requestWaterTanker(listId);
     const request = await waterTankerList.myOpenRequestPublic();
 
-    console.log('request', request);
-
     return request;
   } catch (error) {
-    console.log('error', error);
     return null;
   }
 }
@@ -90,6 +87,48 @@ export async function moveRequest(listId: number) {
     const waterTankerList = new WaterTankerList(user);
 
     await waterTankerList.moveRequestToList(listId);
+  } catch (error) {
+    return null;
+  }
+}
+
+export async function getLists() {
+  const user = await User.getUserByCookies();
+
+  if (!user) {
+    return {};
+  }
+
+  const lists = await WaterTankerList.getLists();
+
+  return lists;
+}
+
+export async function createList(name: string, description: string) {
+  const user = await User.getUserByCookies();
+
+  if (!user) {
+    return null;
+  }
+
+  try {
+    const waterTankerList = new WaterTankerList(user);
+
+    await waterTankerList.createList(name, description);
+  } catch (error) {
+    return null;
+  }
+}
+
+export async function registerUser(phone: string, house: number) {
+  const user = await User.getUserByCookies();
+
+  if (!user) {
+    return null;
+  }
+
+  try {
+    await User.register(phone, house);
   } catch (error) {
     return null;
   }

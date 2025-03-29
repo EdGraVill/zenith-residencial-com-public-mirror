@@ -1,37 +1,124 @@
-import type { FC } from 'react';
+'use client';
 
-import Auth from './Auth';
+import { type FC, useEffect, useState } from 'react';
+
 import Lists from './Lists';
 import MyRequestAction from './MyRequestAction';
+import NewListAction from './NewListAction';
+import NewUserAction from './NewUserAction';
+import { getLists } from './actions';
 import { Badge } from '@/components/ui/badge';
-import User from '@/controllers/User';
-import WaterTankerList from '@/controllers/WaterTankerList';
+import type { WaterTankerRequestsListed } from '@/controllers/WaterTankerList';
+import type { privateWaterTankerRequestTable } from '@/db/privateSchema';
+import type { privateWaterTankerRequestView } from '@/db/privateViews';
+import supabase from '@/utils/supabase/client';
 
-const PipasPage: FC = async () => {
-  const user = await User.getUserByCookies();
+interface Props {
+  currentUserId: number;
+  isAdmin: boolean;
+  lists: WaterTankerRequestsListed;
+  ownRequest: typeof privateWaterTankerRequestView.$inferSelect | null;
+}
 
-  if (!user) {
-    return <Auth />;
-  }
+const Pipas: FC<Props> = ({ currentUserId, isAdmin, lists, ownRequest }) => {
+  const [internalLists, setInternalLists] = useState<WaterTankerRequestsListed>(lists);
+  const [internalOwnRequest, setInternalOwnRequest] = useState<
+    typeof privateWaterTankerRequestView.$inferSelect | null
+  >(ownRequest);
 
-  const lists = await WaterTankerList.getLists();
-  const waterTankerList = new WaterTankerList(user);
+  useEffect(() => {
+    setInternalLists(lists);
+  }, [lists]);
+
+  useEffect(() => {
+    setInternalOwnRequest(ownRequest);
+  }, [ownRequest]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('water_tanker_request_list_insert')
+      .on<typeof privateWaterTankerRequestTable.$inferSelect>(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'private',
+          table: 'water_tanker_request_list',
+        },
+        () => {
+          getLists().then((newLists) => setInternalLists(newLists));
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('water_tanker_request_insert')
+      .on<typeof privateWaterTankerRequestTable.$inferSelect>(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'private',
+          table: 'water_tanker_request',
+        },
+        () => {
+          getLists().then((newLists) => setInternalLists(newLists));
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('water_tanker_request_update')
+      .on<typeof privateWaterTankerRequestTable.$inferSelect>(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'private',
+          table: 'water_tanker_request',
+        },
+        () => {
+          getLists().then((newLists) => setInternalLists(newLists));
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   return (
     <div className="container py-8">
       <header className="flex flex-col items-center">
         <h1 className="text-3xl font-bold">Lista de pipas</h1>
-        <h2 className="text-2xl">UP {await user.myHouse()}</h2>
-        {(await user.canBypass()) && <Badge className="bg-amber-200 text-amber-950">Admin</Badge>}
+        <h2 className="text-2xl">UP {currentUserId}</h2>
+        {isAdmin && <Badge className="bg-amber-200 text-amber-950">Admin</Badge>}
       </header>
-      <nav className="my-8">
-        <MyRequestAction lists={lists} openRequest={await waterTankerList.myOpenRequestPublic()} />
+      <nav className="my-8 flex flex-row gap-6">
+        <MyRequestAction lists={internalLists} openRequest={internalOwnRequest} setOwnRequest={setInternalOwnRequest} />
+        <NewListAction isAdmin={isAdmin} />
+        <NewUserAction isAdmin={isAdmin} />
       </nav>
       <main className="flex flex-row gap-6">
-        <Lists currentUserId={user.id} isAdmin={await user.canBypass()} lists={lists} />
+        <Lists
+          currentUserId={currentUserId}
+          isAdmin={isAdmin}
+          lists={internalLists}
+          setOwnRequest={setInternalOwnRequest}
+        />
       </main>
     </div>
   );
 };
 
-export default PipasPage;
+export default Pipas;

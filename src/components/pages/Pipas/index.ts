@@ -1,1 +1,1 @@
-export { default } from './Pipas';
+export { default } from './Page';
