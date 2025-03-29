@@ -104,12 +104,12 @@ const Pipas: FC<Props> = ({ currentUserId, isAdmin, lists, ownRequest }) => {
         <h2 className="text-2xl">UP {currentUserId}</h2>
         {isAdmin && <Badge className="bg-amber-200 text-amber-950">Admin</Badge>}
       </header>
-      <nav className="my-8 flex flex-row gap-6">
+      <nav className="my-8 flex flex-row flex-wrap gap-6">
         <MyRequestAction lists={internalLists} openRequest={internalOwnRequest} setOwnRequest={setInternalOwnRequest} />
         <NewListAction isAdmin={isAdmin} />
         <NewUserAction isAdmin={isAdmin} />
       </nav>
-      <main className="flex flex-row gap-6">
+      <main className="flex flex-row gap-6 flex-wrap">
         <Lists
           currentUserId={currentUserId}
           isAdmin={isAdmin}
