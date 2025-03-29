@@ -2,8 +2,8 @@
 
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { useRouter } from 'next/navigation';
-import { type FC, useState } from 'react';
+import { useState } from 'react';
+import type { Dispatch, FC, SetStateAction } from 'react';
 
 import { cancelRequest, completeRequest, moveRequest } from './actions';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { WaterTankerRequestsListed } from '@/controllers/WaterTankerList';
 import type { privateWaterTankerRequestStatusEnum } from '@/db/privateSchema';
+import type { privateWaterTankerRequestView } from '@/db/privateViews';
 import { cn } from '@/lib/utils';
 
 interface BadgeStatusProps {
@@ -37,18 +38,18 @@ interface ListsProps {
   currentUserId: number;
   isAdmin: boolean;
   lists: WaterTankerRequestsListed;
+  setOwnRequest: Dispatch<SetStateAction<typeof privateWaterTankerRequestView.$inferSelect | null>>;
 }
 
-const Lists: FC<ListsProps> = ({ currentUserId, isAdmin, lists }) => {
+const Lists: FC<ListsProps> = ({ currentUserId, isAdmin, lists, setOwnRequest }) => {
   const [isLoading, setLoadingState] = useState(false);
-  const { refresh } = useRouter();
   const listNames = Object.keys(lists);
 
   function onComplete(requestUUID: string) {
     setLoadingState(true);
     completeRequest(requestUUID).finally(() => {
       setLoadingState(false);
-      refresh();
+      setOwnRequest(null);
     });
   }
 
@@ -56,7 +57,7 @@ const Lists: FC<ListsProps> = ({ currentUserId, isAdmin, lists }) => {
     setLoadingState(true);
     cancelRequest(requestUUID).finally(() => {
       setLoadingState(false);
-      refresh();
+      setOwnRequest(null);
     });
   }
 
@@ -64,7 +65,6 @@ const Lists: FC<ListsProps> = ({ currentUserId, isAdmin, lists }) => {
     setLoadingState(true);
     moveRequest(lists[listName].id).finally(() => {
       setLoadingState(false);
-      refresh();
     });
   }
 
@@ -99,50 +99,46 @@ const Lists: FC<ListsProps> = ({ currentUserId, isAdmin, lists }) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {list.list.map((request) => {
-                  console.log(request);
-
-                  return (
-                    <TableRow className={cn({ 'bg-blue-50': currentUserId === request.house })} key={request.uuid}>
-                      <TableCell className="text-center text-xs max-w-[80px]">
-                        <span className="text-balance">
-                          {formatDistanceToNow(request.createdAt, { addSuffix: true, locale: es })}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-center font-bold">{request.house}</TableCell>
-                      <TableCell className="text-center">
-                        <BadgeStatus status={request.requestStatus} />
-                      </TableCell>
-                      <TableCell>
-                        {request.requestStatus !== 'pending' || (currentUserId !== request.house && !isAdmin) ? (
-                          <Select disabled={true}>
-                            <SelectTrigger className="w-[100px]">Acciones</SelectTrigger>
-                          </Select>
-                        ) : (
-                          <Select disabled={isLoading} onValueChange={onValueChange(request.uuid)} value="">
-                            <SelectTrigger className="w-[100px]">Acciones</SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="action:complete">✅ Completar</SelectItem>
-                              <SelectItem value="action:cancel">❌ Cancelar</SelectItem>
-                              {currentUserId === request.house && (
-                                <SelectGroup>
-                                  <SelectLabel>Mover a</SelectLabel>
-                                  {listNames
-                                    .filter((name) => name !== list.name)
-                                    .map((name) => (
-                                      <SelectItem key={name} value={name}>
-                                        {name}
-                                      </SelectItem>
-                                    ))}
-                                </SelectGroup>
-                              )}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                {list.list.map((request) => (
+                  <TableRow className={cn({ 'bg-blue-50': currentUserId === request.house })} key={request.uuid}>
+                    <TableCell className="text-center text-xs max-w-[80px]">
+                      <span className="text-balance">
+                        {formatDistanceToNow(request.createdAt, { addSuffix: true, locale: es })}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center font-bold">{request.house}</TableCell>
+                    <TableCell className="text-center">
+                      <BadgeStatus status={request.requestStatus} />
+                    </TableCell>
+                    <TableCell>
+                      {request.requestStatus !== 'pending' || (currentUserId !== request.house && !isAdmin) ? (
+                        <Select disabled={true}>
+                          <SelectTrigger className="w-[100px]">Acciones</SelectTrigger>
+                        </Select>
+                      ) : (
+                        <Select disabled={isLoading} onValueChange={onValueChange(request.uuid)} value="">
+                          <SelectTrigger className="w-[100px]">Acciones</SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="action:complete">✅ Completar</SelectItem>
+                            <SelectItem value="action:cancel">❌ Cancelar</SelectItem>
+                            {currentUserId === request.house && (
+                              <SelectGroup>
+                                <SelectLabel>Mover a</SelectLabel>
+                                {listNames
+                                  .filter((name) => name !== list.name)
+                                  .map((name) => (
+                                    <SelectItem key={name} value={name}>
+                                      {name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectGroup>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </div>

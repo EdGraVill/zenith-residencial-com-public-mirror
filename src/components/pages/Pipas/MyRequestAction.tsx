@@ -1,8 +1,8 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { type FC, useEffect, useState } from 'react';
+import { useState } from 'react';
+import type { Dispatch, FC, SetStateAction } from 'react';
 
 import { request } from './actions';
 import { Button } from '@/components/ui/button';
@@ -22,19 +22,12 @@ import type { privateWaterTankerRequestView } from '@/db/privateViews';
 interface Props {
   lists: WaterTankerRequestsListed;
   openRequest: typeof privateWaterTankerRequestView.$inferSelect | null;
+  setOwnRequest: Dispatch<SetStateAction<typeof privateWaterTankerRequestView.$inferSelect | null>>;
 }
 
-const MyRequestAction: FC<Props> = ({ lists, openRequest }) => {
-  const { refresh } = useRouter();
+const MyRequestAction: FC<Props> = ({ lists, openRequest, setOwnRequest }) => {
   const [isLoading, setLoadingState] = useState(false);
   const [listName, setListName] = useState<string>('');
-  const [currentRequest, setCurrentRequest] = useState<typeof privateWaterTankerRequestView.$inferSelect | null>(
-    openRequest,
-  );
-
-  useEffect(() => {
-    setCurrentRequest(openRequest);
-  }, [openRequest]);
 
   function onRequest() {
     const list = lists[listName];
@@ -50,20 +43,20 @@ const MyRequestAction: FC<Props> = ({ lists, openRequest }) => {
           return;
         }
 
-        setCurrentRequest(response);
-        refresh();
+        setOwnRequest(response);
+        setListName('');
       })
       .finally(() => setLoadingState(false));
   }
 
-  if (!currentRequest) {
+  if (!openRequest) {
     return (
       <Card className="w-[250px]">
         <CardHeader>
           <CardTitle>Anotar mi casa</CardTitle>
           <CardDescription>En la lista:</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1">
           <Select onValueChange={setListName} value={listName}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Selecciona una lista" />
@@ -77,7 +70,7 @@ const MyRequestAction: FC<Props> = ({ lists, openRequest }) => {
             </SelectContent>
           </Select>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex justify-end">
           <CardAction>
             <Button disabled={isLoading} onClick={onRequest}>
               {isLoading ? <Loader2 className="animate-spin" /> : 'Anotar'}
