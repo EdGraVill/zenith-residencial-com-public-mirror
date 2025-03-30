@@ -2,6 +2,7 @@ import { and, asc, between, eq, or, sql } from 'drizzle-orm';
 
 import { db } from '.';
 import {
+  privateHouseInformationTable,
   privateSchema,
   privateWaterTankerRequestListTable,
   privateWaterTankerRequestStatusEnum,
@@ -16,6 +17,8 @@ export const privateWaterTankerRequestView = privateSchema.view('v_water_tanker_
       house: publicUsersTable.house,
       list: sql<string>`${privateWaterTankerRequestListTable.name}`.as('list'),
       requestStatus: privateWaterTankerRequestTable.requestStatus,
+      street: privateHouseInformationTable.street,
+      updatedAt: privateWaterTankerRequestTable.updatedAt,
       uuid: privateWaterTankerRequestTable.uuid,
     })
     .from(privateWaterTankerRequestTable)
@@ -24,12 +27,16 @@ export const privateWaterTankerRequestView = privateSchema.view('v_water_tanker_
       eq(privateWaterTankerRequestTable.waterTankerRequestListId, privateWaterTankerRequestListTable.id),
     )
     .innerJoin(publicUsersTable, eq(privateWaterTankerRequestTable.userId, publicUsersTable.id))
+    .innerJoin(
+      privateHouseInformationTable,
+      eq(privateWaterTankerRequestTable.userId, privateHouseInformationTable.userId),
+    )
     .where(
       and(
         eq(privateWaterTankerRequestTable.isActive, true),
         or(
           eq(privateWaterTankerRequestTable.requestStatus, privateWaterTankerRequestStatusEnum.enumValues[0]),
-          between(privateWaterTankerRequestTable.updatedAt, sql`now() - interval '2 hours'`, sql`now()`),
+          between(privateWaterTankerRequestTable.updatedAt, sql`now() - interval '15 minutes'`, sql`now()`),
         ),
       ),
     )

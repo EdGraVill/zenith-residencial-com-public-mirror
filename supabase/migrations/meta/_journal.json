@@ -43,6 +43,34 @@
       "when": 1743245861379,
       "tag": "0005_third_silhouette",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1743270863316,
+      "tag": "0006_gigantic_solo",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1743297511467,
+      "tag": "0007_public_tarot",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1743298089520,
+      "tag": "0008_free_micromax",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1743299460161,
+      "tag": "0009_last_random",
+      "breakpoints": true
     }
   ]
 }

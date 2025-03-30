@@ -3,7 +3,7 @@
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useState } from 'react';
-import type { Dispatch, FC, SetStateAction } from 'react';
+import type { ComponentProps, Dispatch, FC, SetStateAction } from 'react';
 
 import { cancelRequest, completeRequest, moveRequest } from './actions';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,7 @@ import type { privateWaterTankerRequestStatusEnum } from '@/db/privateSchema';
 import type { privateWaterTankerRequestView } from '@/db/privateViews';
 import { cn } from '@/lib/utils';
 
-interface BadgeStatusProps {
+interface BadgeStatusProps extends ComponentProps<typeof Badge> {
   status: (typeof privateWaterTankerRequestStatusEnum.enumValues)[number];
 }
 
@@ -30,8 +30,10 @@ const mapStatusToText: Record<(typeof privateWaterTankerRequestStatusEnum.enumVa
   pending: 'Pendiente',
 };
 
-const BadgeStatus: FC<BadgeStatusProps> = ({ status }) => (
-  <Badge className={mapStatusToClassname[status]}>{mapStatusToText[status]}</Badge>
+const BadgeStatus: FC<BadgeStatusProps> = ({ status, className, ...props }) => (
+  <Badge className={cn(mapStatusToClassname[status], className)} {...props}>
+    {mapStatusToText[status]}
+  </Badge>
 );
 
 interface ListsProps {
@@ -92,7 +94,6 @@ const Lists: FC<ListsProps> = ({ currentUserId, isAdmin, lists, setOwnRequest })
             <Table>
               <TableHeader>
                 <TableRow className="bg-black hover:bg-black">
-                  <TableHead className="text-center font-semibold text-white max-w-[80px]">Creación</TableHead>
                   <TableHead className="text-center font-semibold text-white">UP</TableHead>
                   <TableHead className="text-center font-semibold text-white">Estado</TableHead>
                   <TableHead className="text-center font-semibold text-white"></TableHead>
@@ -100,23 +101,49 @@ const Lists: FC<ListsProps> = ({ currentUserId, isAdmin, lists, setOwnRequest })
               </TableHeader>
               <TableBody>
                 {list.list.map((request) => (
-                  <TableRow className={cn({ 'bg-blue-50': currentUserId === request.house })} key={request.uuid}>
-                    <TableCell className="text-center text-xs max-w-[80px]">
-                      <span className="text-balance">
-                        {formatDistanceToNow(request.createdAt, { addSuffix: true, locale: es })}
-                      </span>
+                  <TableRow
+                    className={cn({
+                      'bg-blue-50': currentUserId === request.house,
+                      'opacity-50': request.requestStatus !== 'pending',
+                    })}
+                    key={request.uuid}
+                  >
+                    <TableCell className="w-[104px]">
+                      <div className="flex flex-col items-center justify-center">
+                        {request.requestStatus === 'pending' && (
+                          <span className="text-xs font-light text-nowrap">{request.street}</span>
+                        )}
+                        <span
+                          className={cn('font-bold', {
+                            'text-xs': request.requestStatus !== 'pending',
+                          })}
+                        >
+                          {request.house}
+                        </span>
+                      </div>
                     </TableCell>
-                    <TableCell className="text-center font-bold">{request.house}</TableCell>
-                    <TableCell className="text-center">
-                      <BadgeStatus status={request.requestStatus} />
+                    <TableCell className="w-[180px]">
+                      <div className="flex flex-col items-center justify-center gap-y-1">
+                        <BadgeStatus
+                          className={cn({
+                            'text-[10px]': request.requestStatus !== 'pending',
+                          })}
+                          status={request.requestStatus}
+                        />
+                        {request.requestStatus === 'pending' && (
+                          <span className="text-[10px] font-light text-balance text-center">
+                            Desde hace {formatDistanceToNow(request.createdAt, { locale: es })}
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
-                    <TableCell>
-                      {request.requestStatus !== 'pending' || (currentUserId !== request.house && !isAdmin) ? (
-                        <Select disabled={true}>
-                          <SelectTrigger className="w-[100px]">Acciones</SelectTrigger>
-                        </Select>
-                      ) : (
-                        <Select disabled={isLoading} onValueChange={onValueChange(request.uuid)} value="">
+                    <TableCell className="w-[100px]">
+                      {request.requestStatus === 'pending' ? (
+                        <Select
+                          disabled={isLoading || (currentUserId !== request.house && !isAdmin)}
+                          onValueChange={onValueChange(request.uuid)}
+                          value=""
+                        >
                           <SelectTrigger className="w-[100px]">Acciones</SelectTrigger>
                           <SelectContent>
                             <SelectItem value="action:complete">✅ Completar</SelectItem>
@@ -135,6 +162,10 @@ const Lists: FC<ListsProps> = ({ currentUserId, isAdmin, lists, setOwnRequest })
                             )}
                           </SelectContent>
                         </Select>
+                      ) : (
+                        <span className="text-[10px] font-light text-center w-full inline-block">
+                          Hace {formatDistanceToNow(request.updatedAt, { locale: es })}
+                        </span>
                       )}
                     </TableCell>
                   </TableRow>
