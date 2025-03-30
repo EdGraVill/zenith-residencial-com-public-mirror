@@ -88,10 +88,10 @@ const Lists: FC<ListsProps> = ({ currentUserId, isAdmin, lists, setOwnRequest })
         return (
           <div className="max-w-md" key={list.id}>
             <header className="flex flex-col items-center">
-              <h3 className="text-xl font-bold">{list.name}</h3>
-              <p className="text-sm p-2 text-balance bg-zinc-100 m-2 rounded-lg">{list.description}</p>
+              <h3 className="text-xl">{list.name}</h3>
+              <p className="text-sm p-2 text-balance bg-zinc-100 w-full">{list.description}</p>
             </header>
-            <Table>
+            <Table className="border">
               <TableHeader>
                 <TableRow className="bg-black hover:bg-black">
                   <TableHead className="text-center font-semibold text-white">UP</TableHead>
@@ -100,6 +100,13 @@ const Lists: FC<ListsProps> = ({ currentUserId, isAdmin, lists, setOwnRequest })
                 </TableRow>
               </TableHeader>
               <TableBody>
+                {!list.list.length && (
+                  <TableRow>
+                    <TableCell className="text-center w-[404px]" colSpan={3}>
+                      <span className="text-sm font-light text-balance">Sin solicitudes para mostrar</span>
+                    </TableCell>
+                  </TableRow>
+                )}
                 {list.list.map((request) => (
                   <TableRow
                     className={cn({
@@ -108,7 +115,7 @@ const Lists: FC<ListsProps> = ({ currentUserId, isAdmin, lists, setOwnRequest })
                     })}
                     key={request.uuid}
                   >
-                    <TableCell className="w-[104px]">
+                    <TableCell className="w-[105px]">
                       <div className="flex flex-col items-center justify-center">
                         {request.requestStatus === 'pending' && (
                           <span className="text-xs font-light text-nowrap">{request.street}</span>
@@ -137,7 +144,7 @@ const Lists: FC<ListsProps> = ({ currentUserId, isAdmin, lists, setOwnRequest })
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="w-[100px]">
+                    <TableCell className="w-[120px]">
                       {request.requestStatus === 'pending' ? (
                         <Select
                           disabled={isLoading || (currentUserId !== request.house && !isAdmin)}
