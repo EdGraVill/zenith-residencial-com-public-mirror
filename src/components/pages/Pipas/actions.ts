@@ -133,3 +133,37 @@ export async function registerUser(phone: string, house: number) {
     return null;
   }
 }
+
+export async function getOwnRequest() {
+  const user = await User.getUserByCookies();
+
+  if (!user) {
+    return null;
+  }
+
+  try {
+    const waterTankerList = new WaterTankerList(user);
+
+    const request = await waterTankerList.myOpenRequestPublic();
+
+    return request;
+  } catch (error) {
+    return null;
+  }
+}
+
+export async function addComment(comment: string, requestUUID: string) {
+  const user = await User.getUserByCookies();
+
+  if (!user) {
+    return null;
+  }
+
+  try {
+    const waterTankerList = new WaterTankerList(user);
+
+    await waterTankerList.addComment(comment, requestUUID);
+  } catch (error) {
+    return null;
+  }
+}

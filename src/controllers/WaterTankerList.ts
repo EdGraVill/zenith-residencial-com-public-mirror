@@ -4,20 +4,22 @@ import type User from './User';
 import { db } from '@/db';
 import { hiddenWaterTankerRequestHRTable } from '@/db/hiddenSchema';
 import {
+  privateWaterTankerRequestCommentsTable,
   privateWaterTankerRequestListTable,
   privateWaterTankerRequestStatusEnum,
   privateWaterTankerRequestTable,
 } from '@/db/privateSchema';
 import { privateWaterTankerRequestView } from '@/db/privateViews';
 
-export interface WaterTankerRequestsListed {
-  [listName: string]: {
+export type WaterTankerRequestsListed = Record<
+  string,
+  {
     description: string;
     id: number;
     list: Array<Omit<typeof privateWaterTankerRequestView.$inferSelect, 'list'>>;
     name: string;
-  };
-}
+  }
+>;
 
 export default class WaterTankerList {
   public static async getLists(): Promise<WaterTankerRequestsListed> {
@@ -40,6 +42,7 @@ export default class WaterTankerList {
 
     waterTankerRequestView.forEach((request) => {
       waterTankerRequestsListed[request.list as keyof typeof waterTankerRequestsListed].list.push({
+        comments: request.comments,
         createdAt: request.createdAt,
         house: request.house,
         requestStatus: request.requestStatus,
@@ -234,5 +237,27 @@ export default class WaterTankerList {
     const createdRequest = await this.requestWaterTanker(listId);
 
     return createdRequest;
+  }
+
+  public async addComment(comment: string, requestUUID: string) {
+    const waterTankerRequestTable = await db
+      .select({
+        id: privateWaterTankerRequestTable.id,
+      })
+      .from(privateWaterTankerRequestTable)
+      .where(eq(privateWaterTankerRequestTable.uuid, requestUUID))
+      .limit(1);
+
+    if (!waterTankerRequestTable.length) {
+      throw new Error('Forbidden');
+    }
+
+    const waterTankerRequestId = waterTankerRequestTable[0].id;
+
+    await db.insert(privateWaterTankerRequestCommentsTable).values({
+      comment,
+      userId: this.user.id,
+      waterTankerRequestId,
+    });
   }
 }
