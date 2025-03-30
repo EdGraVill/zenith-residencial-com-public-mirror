@@ -71,6 +71,13 @@
       "when": 1743299460161,
       "tag": "0009_last_random",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1743362595583,
+      "tag": "0010_mushy_scrambler",
+      "breakpoints": true
     }
   ]
 }

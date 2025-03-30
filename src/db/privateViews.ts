@@ -4,15 +4,34 @@ import { db } from '.';
 import {
   privateHouseInformationTable,
   privateSchema,
+  privateWaterTankerRequestCommentsTable,
   privateWaterTankerRequestListTable,
   privateWaterTankerRequestStatusEnum,
   privateWaterTankerRequestTable,
 } from './privateSchema';
 import { publicUsersTable } from './publicSchema';
 
+interface Comment {
+  author: number;
+  comment: string;
+  createdAt: Date;
+  id: number;
+}
+
 export const privateWaterTankerRequestView = privateSchema.view('v_water_tanker_request').as(
   db
     .select({
+      comments: sql<Comment[]>`coalesce(
+        json_agg(
+          json_build_object(
+            'author', ${privateWaterTankerRequestCommentsTable.userId},
+            'comment', ${privateWaterTankerRequestCommentsTable.comment},
+            'createdAt', ${privateWaterTankerRequestCommentsTable.createdAt},
+            'id', ${privateWaterTankerRequestCommentsTable.id}
+          )
+        ) filter (where water_tanker_request_comments is not null),
+        '[]'::json
+      )`.as('comments'),
       createdAt: privateWaterTankerRequestTable.createdAt,
       house: publicUsersTable.house,
       list: sql<string>`${privateWaterTankerRequestListTable.name}`.as('list'),
@@ -31,6 +50,10 @@ export const privateWaterTankerRequestView = privateSchema.view('v_water_tanker_
       privateHouseInformationTable,
       eq(privateWaterTankerRequestTable.userId, privateHouseInformationTable.userId),
     )
+    .leftJoin(
+      privateWaterTankerRequestCommentsTable,
+      eq(privateWaterTankerRequestTable.id, privateWaterTankerRequestCommentsTable.waterTankerRequestId),
+    )
     .where(
       and(
         eq(privateWaterTankerRequestTable.isActive, true),
@@ -39,6 +62,15 @@ export const privateWaterTankerRequestView = privateSchema.view('v_water_tanker_
           between(privateWaterTankerRequestTable.updatedAt, sql`now() - interval '15 minutes'`, sql`now()`),
         ),
       ),
+    )
+    .groupBy(
+      privateWaterTankerRequestTable.createdAt,
+      publicUsersTable.house,
+      privateWaterTankerRequestListTable.name,
+      privateWaterTankerRequestTable.requestStatus,
+      privateHouseInformationTable.street,
+      privateWaterTankerRequestTable.updatedAt,
+      privateWaterTankerRequestTable.uuid,
     )
     .orderBy(asc(privateWaterTankerRequestTable.createdAt)),
 );
