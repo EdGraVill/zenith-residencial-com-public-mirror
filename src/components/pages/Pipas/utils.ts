@@ -17,6 +17,8 @@ export function appendRequest(
     createdAt: request.createdAt,
     house: request.house,
     requestStatus: request.requestStatus,
+    street: request.street,
+    updatedAt: request.updatedAt,
     uuid: request.uuid,
   });
 

@@ -2,19 +2,27 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
-import { type FC, useState } from 'react';
+import { type FC, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { registerUser } from './actions';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
 const formSchema = z.object({
   house: z.preprocess(
-    (val) => parseInt(val as string, 10),
+    (val) => parseInt(val as string, 10) || 0,
     z.number().min(1, 'La casa es requerida').max(171, 'La casa no puede ser mayor a 171'),
   ),
   phone: z
@@ -29,16 +37,21 @@ interface Props {
 
 const NewUserAction: FC<Props> = ({ isAdmin }) => {
   const [isLoading, setLoadingState] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
   });
 
+  useEffect(() => {
+    form.reset({ house: '' as unknown as number, phone: '' });
+  }, [isOpen]);
+
   function onSubmit(values: z.infer<typeof formSchema>) {
     setLoadingState(true);
     registerUser(values.phone, values.house).finally(() => {
-      form.reset({ house: '' as unknown as number, phone: '' });
       setLoadingState(false);
+      setIsOpen(false);
     });
   }
 
@@ -47,50 +60,55 @@ const NewUserAction: FC<Props> = ({ isAdmin }) => {
   }
 
   return (
-    <Card className="w-[350px]">
-      <CardHeader>
-        <CardTitle>Agregar usuario</CardTitle>
-        <CardDescription>Asociar teléfono con casa</CardDescription>
-      </CardHeader>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="flex flex-col gap-4">
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Teléfono</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="house"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>UP</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+    <Dialog onOpenChange={setIsOpen} open={isOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline">Agregar usuario</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Agregar usuario</DialogTitle>
+          <DialogDescription>Asociar teléfono con casa</DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <div className="flex flex-row gap-4">
+              <FormField
+                control={form.control}
+                name="house"
+                render={({ field }) => (
+                  <FormItem className="max-w-[80px]">
+                    <FormLabel>UP</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>Teléfono</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormMessage />
-          </CardContent>
-          <CardFooter className="mt-6 flex justify-end">
-            <Button disabled={isLoading} type="submit">
-              Registrar {isLoading && <Loader2 className="animate-spin" />}
-            </Button>
-          </CardFooter>
-        </form>
-      </Form>
-    </Card>
+            <DialogFooter className="mt-6 flex justify-end">
+              <Button disabled={isLoading} type="submit">
+                Registrar {isLoading && <Loader2 className="animate-spin" />}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 };
 
