@@ -13,15 +13,7 @@ export function appendRequest(
 
   const clonedLists = structuredClone(lists);
 
-  clonedLists[listName].list.push({
-    comments: request.comments,
-    createdAt: request.createdAt,
-    house: request.house,
-    requestStatus: request.requestStatus,
-    street: request.street,
-    updatedAt: request.updatedAt,
-    uuid: request.uuid,
-  });
+  clonedLists[listName].list.push(request);
 
   return clonedLists;
 }
