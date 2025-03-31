@@ -5,6 +5,7 @@ import type { z } from 'zod';
 
 import Actions from './Actions';
 import BadgeStatus from './BadgeStatus';
+import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 import type { listsSchema, requestSchema } from '@/lib/schemas';
 import { cn } from '@/lib/utils';
@@ -38,6 +39,11 @@ const RequestRow: FC<Props> = (props) => {
             })}
           >
             {request.house}
+            {request.isTesting && (
+              <Badge className="ml-2 border-zinc-400 text-zinc-500" variant="outline">
+                Test
+              </Badge>
+            )}
           </span>
         </div>
       </TableCell>
@@ -56,7 +62,7 @@ const RequestRow: FC<Props> = (props) => {
           )}
         </div>
       </TableCell>
-      <TableCell className="w-[120px]">
+      <TableCell className="w-[120px] flex flex-row justify-center">
         <Actions {...props} />
       </TableCell>
     </TableRow>

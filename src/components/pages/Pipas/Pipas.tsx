@@ -6,6 +6,7 @@ import type { z } from 'zod';
 import Lists from './Lists';
 import MyRequestAction from './MyRequestAction';
 import NewListAction from './NewListAction';
+import NewTestingRequest from './NewTestingRequest';
 import NewUserAction from './NewUserAction';
 import { getLists, getOwnRequest } from './actions';
 import { Badge } from '@/components/ui/badge';
@@ -132,6 +133,7 @@ const Pipas: FC<Props> = ({ currentUserId, isAdmin, lists, ownRequest }) => {
       <aside className="my-8 flex flex-row gap-4 flex-wrap justify-center">
         <NewListAction isAdmin={isAdmin} />
         <NewUserAction isAdmin={isAdmin} />
+        <NewTestingRequest isAdmin={isAdmin} lists={internalLists} />
       </aside>
       <nav className="my-8 flex flex-row flex-wrap gap-6 justify-center">
         <MyRequestAction lists={internalLists} openRequest={internalOwnRequest} />

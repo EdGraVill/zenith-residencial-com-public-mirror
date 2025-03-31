@@ -11,6 +11,8 @@ export const requestSchema = z.object({
   comments: z.array(waterTankerRequestComment),
   createdAt: z.preprocess((val) => new Date(val as string), z.date()),
   house: z.number(),
+  isTesting: z.boolean(),
+  list: z.string(),
   requestStatus: z.enum(['pending', 'completed', 'cancelled']),
   street: z.string(),
   updatedAt: z.preprocess((val) => new Date(val as string), z.date()),

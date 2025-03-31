@@ -34,6 +34,7 @@ export const privateWaterTankerRequestView = privateSchema.view('v_water_tanker_
       )`.as('comments'),
       createdAt: privateWaterTankerRequestTable.createdAt,
       house: publicUsersTable.house,
+      isTesting: privateWaterTankerRequestTable.isTesting,
       list: sql<string>`${privateWaterTankerRequestListTable.name}`.as('list'),
       requestStatus: privateWaterTankerRequestTable.requestStatus,
       street: privateHouseInformationTable.street,
@@ -66,6 +67,7 @@ export const privateWaterTankerRequestView = privateSchema.view('v_water_tanker_
     .groupBy(
       privateWaterTankerRequestTable.createdAt,
       publicUsersTable.house,
+      privateWaterTankerRequestTable.isTesting,
       privateWaterTankerRequestListTable.name,
       privateWaterTankerRequestTable.requestStatus,
       privateHouseInformationTable.street,

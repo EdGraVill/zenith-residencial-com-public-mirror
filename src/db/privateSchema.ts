@@ -32,7 +32,9 @@ export const privateWaterTankerRequestTable = privateSchema.table('water_tanker_
   ...pk,
   ...timestamps,
   isActive: t.boolean('is_active').notNull().default(true),
+  isTesting: t.boolean('is_testing').notNull().default(false),
   requestStatus: privateWaterTankerRequestStatusEnum('request_status').notNull().default('pending'),
+  testerUserId: t.integer('tester_user_id').references(() => publicUsersTable.id),
   userId: t
     .integer('user_id')
     .notNull()

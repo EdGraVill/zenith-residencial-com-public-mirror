@@ -16,7 +16,7 @@ export type WaterTankerRequestsListed = Record<
   {
     description: string;
     id: number;
-    list: Array<Omit<typeof privateWaterTankerRequestView.$inferSelect, 'list'>>;
+    list: Array<typeof privateWaterTankerRequestView.$inferSelect>;
     name: string;
   }
 >;
@@ -25,32 +25,19 @@ export default class WaterTankerList {
   public static async getLists(): Promise<WaterTankerRequestsListed> {
     const waterTankerRequestListTable = await db.select().from(privateWaterTankerRequestListTable);
 
+    const waterTankerRequestView = await db.select().from(privateWaterTankerRequestView);
     const waterTankerRequestsListed: WaterTankerRequestsListed = waterTankerRequestListTable.reduce(
       (acc, list) => ({
         ...acc,
         [list.name]: {
           description: list.description,
           id: list.id,
-          list: [],
+          list: waterTankerRequestView.filter((l) => l.list === list.name),
           name: list.name,
         },
       }),
       {},
     );
-
-    const waterTankerRequestView = await db.select().from(privateWaterTankerRequestView);
-
-    waterTankerRequestView.forEach((request) => {
-      waterTankerRequestsListed[request.list as keyof typeof waterTankerRequestsListed].list.push({
-        comments: request.comments,
-        createdAt: request.createdAt,
-        house: request.house,
-        requestStatus: request.requestStatus,
-        street: request.street,
-        updatedAt: request.updatedAt,
-        uuid: request.uuid,
-      });
-    });
 
     return waterTankerRequestsListed;
   }
@@ -88,6 +75,7 @@ export default class WaterTankerList {
           eq(privateWaterTankerRequestTable.userId, this.user.id),
           eq(privateWaterTankerRequestTable.isActive, true),
           eq(privateWaterTankerRequestTable.requestStatus, privateWaterTankerRequestStatusEnum.enumValues[0]),
+          eq(privateWaterTankerRequestTable.isTesting, false),
         ),
       )
       .limit(1);
@@ -107,6 +95,7 @@ export default class WaterTankerList {
         and(
           eq(privateWaterTankerRequestView.house, this.user.id),
           eq(privateWaterTankerRequestView.requestStatus, privateWaterTankerRequestStatusEnum.enumValues[0]),
+          eq(privateWaterTankerRequestView.isTesting, false),
         ),
       )
       .limit(1);
@@ -285,5 +274,42 @@ export default class WaterTankerList {
       userId: this.user.id,
       waterTankerRequestId,
     });
+  }
+
+  public async addTestingRequest(house: number, listId: number) {
+    const isAdmin = await this.isAdmin();
+
+    if (!isAdmin) {
+      throw new Error('Forbidden');
+    }
+
+    const alreadyInWaterTankerRequestView = await db
+      .select()
+      .from(privateWaterTankerRequestTable)
+      .where(
+        and(
+          eq(privateWaterTankerRequestTable.userId, house),
+          eq(privateWaterTankerRequestTable.isActive, true),
+          eq(privateWaterTankerRequestTable.requestStatus, privateWaterTankerRequestStatusEnum.enumValues[0]),
+          eq(privateWaterTankerRequestTable.isTesting, true),
+        ),
+      )
+      .limit(1);
+
+    if (alreadyInWaterTankerRequestView.length) {
+      throw new Error('Forbidden');
+    }
+
+    const waterTankerRequestTable = await db
+      .insert(privateWaterTankerRequestTable)
+      .values({
+        isTesting: true,
+        testerUserId: this.user.id,
+        userId: house,
+        waterTankerRequestListId: listId,
+      })
+      .returning();
+
+    return waterTankerRequestTable[0];
   }
 }
