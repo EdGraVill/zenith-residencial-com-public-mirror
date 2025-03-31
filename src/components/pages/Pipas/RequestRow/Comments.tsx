@@ -60,24 +60,33 @@ export const Comments: FC<Props> = ({ currentUserId, isOpen, request, setOpenSta
         <div className="flex flex-col gap-4 my-8">
           {request.comments
             .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
-            .map(({ author, comment, createdAt, id }) => (
-              <div
-                className={cn('flex flex-row gap-2 items-start', {
-                  'self-end pl-16': currentUserId === author,
-                  'self-start pr-16': currentUserId !== author,
-                })}
-                key={id}
-              >
-                {currentUserId !== author && <span className="text-xs text-muted-foreground">{author}:</span>}
-                <span className="text-sm bg-accent py-2 px-4">
-                  {comment.replace(new RegExp(`${forbiddenWords.join('|')}`, 'g'), '🤬')}
-                  <span className="block w-full text-end text-[8px]">
+            .map(({ author, comment, createdAt, id }) =>
+              author === 0 ? (
+                <span className="w-full text-xs text-center" key={id}>
+                  {comment} <br />
+                  <span className="text-[8px]">
                     {formatDistanceToNow(subHours(createdAt, 6), { addSuffix: true, locale: es })}
                   </span>
                 </span>
-                {currentUserId === author && <span className="text-xs text-muted-foreground">:Tú</span>}
-              </div>
-            ))}
+              ) : (
+                <div
+                  className={cn('flex flex-row gap-2 items-start', {
+                    'self-end pl-16': currentUserId === author,
+                    'self-start pr-16': currentUserId !== author,
+                  })}
+                  key={id}
+                >
+                  {currentUserId !== author && <span className="text-xs text-muted-foreground">{author}:</span>}
+                  <span className="text-sm bg-accent py-2 px-4">
+                    {comment.trim().replace(new RegExp(`${forbiddenWords.join('|')}`, 'gi'), '🤬')}
+                    <span className="block w-full text-end text-[8px]">
+                      {formatDistanceToNow(subHours(createdAt, 6), { addSuffix: true, locale: es })}
+                    </span>
+                  </span>
+                  {currentUserId === author && <span className="text-xs text-muted-foreground">:Tú</span>}
+                </div>
+              ),
+            )}
         </div>
         <DialogFooter>
           <Form {...form}>

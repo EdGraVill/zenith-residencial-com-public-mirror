@@ -233,8 +233,34 @@ export default class WaterTankerList {
       throw new Error('Forbidden');
     }
 
-    await this.cancelRequest(true);
+    const canceledRequest = await this.cancelRequest(true);
     const createdRequest = await this.requestWaterTanker(listId);
+
+    const canceledListName = await db
+      .select({
+        name: privateWaterTankerRequestListTable.name,
+      })
+      .from(privateWaterTankerRequestListTable)
+      .where(eq(privateWaterTankerRequestListTable.id, canceledRequest.waterTankerRequestListId));
+    const createdListName = await db
+      .select({
+        name: privateWaterTankerRequestListTable.name,
+      })
+      .from(privateWaterTankerRequestListTable)
+      .where(eq(privateWaterTankerRequestListTable.id, createdRequest.waterTankerRequestListId));
+
+    await db
+      .update(privateWaterTankerRequestCommentsTable)
+      .set({
+        waterTankerRequestId: createdRequest.id,
+      })
+      .where(eq(privateWaterTankerRequestCommentsTable.waterTankerRequestId, canceledRequest.id));
+
+    await db.insert(privateWaterTankerRequestCommentsTable).values({
+      comment: `Se movió de la lista ${canceledListName[0].name} a la lista ${createdListName[0].name}`,
+      userId: 0,
+      waterTankerRequestId: createdRequest.id,
+    });
 
     return createdRequest;
   }
