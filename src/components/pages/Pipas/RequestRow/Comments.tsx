@@ -55,7 +55,9 @@ export const Comments: FC<Props> = ({ currentUserId, isOpen, request, setOpenSta
     <Dialog onOpenChange={setOpenState} open={isOpen}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Comentarios sobre la casa {request.house}</DialogTitle>
+          <DialogTitle>
+            Comentarios sobre la casa {request.house} en la lista {request.list}
+          </DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-4 my-8">
           {request.comments
