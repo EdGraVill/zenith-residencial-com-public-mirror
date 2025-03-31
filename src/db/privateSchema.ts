@@ -28,9 +28,20 @@ export const privateWaterTankerRequestListTable = privateSchema.table('water_tan
   name: t.text('name').notNull().unique(),
 });
 
+export const privateWaterTankerRequestListGroupEnum = privateSchema.enum('water_tanker_request_list_group', [
+  'A',
+  'B',
+  'C',
+  'D',
+  'E',
+  'F',
+  'G',
+]);
+
 export const privateWaterTankerRequestTable = privateSchema.table('water_tanker_request', {
   ...pk,
   ...timestamps,
+  group: privateWaterTankerRequestListGroupEnum('group').notNull(),
   isActive: t.boolean('is_active').notNull().default(true),
   isTesting: t.boolean('is_testing').notNull().default(false),
   requestStatus: privateWaterTankerRequestStatusEnum('request_status').notNull().default('pending'),

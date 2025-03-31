@@ -10,6 +10,7 @@ import {
   privateWaterTankerRequestTable,
 } from '@/db/privateSchema';
 import { privateWaterTankerRequestView } from '@/db/privateViews';
+import type { Group } from '@/lib/schemas';
 
 export type WaterTankerRequestsListed = Record<
   string,
@@ -107,7 +108,7 @@ export default class WaterTankerList {
     return alreadyInWaterTankerRequestView[0];
   }
 
-  public async requestWaterTanker(listId: number) {
+  public async requestWaterTanker(listId: number, group: Group) {
     const openRequest = await this.myOpenRequest();
 
     if (openRequest) {
@@ -117,6 +118,7 @@ export default class WaterTankerList {
     const waterTankerRequestTable = await db
       .insert(privateWaterTankerRequestTable)
       .values({
+        group,
         userId: this.user.id,
         waterTankerRequestListId: listId,
       })
@@ -215,15 +217,28 @@ export default class WaterTankerList {
     return waterTankerRequestTable[0];
   }
 
-  public async moveRequestToList(listId: number) {
-    const openRequest = await this.myOpenRequest();
-
-    if (!openRequest) {
+  public async moveRequestToList(listId: number, requestUUID?: string) {
+    if (!this.isAdmin() && requestUUID) {
       throw new Error('Forbidden');
     }
 
-    const canceledRequest = await this.cancelRequest(true);
-    const createdRequest = await this.requestWaterTanker(listId);
+    if (!this.isAdmin() && !requestUUID) {
+      const openRequest = await this.myOpenRequest();
+
+      if (!openRequest) {
+        throw new Error('Forbidden');
+      }
+    }
+
+    const canceledRequest = await this.cancelRequest(true, requestUUID);
+
+    let createdRequest: typeof privateWaterTankerRequestTable.$inferSelect;
+
+    if (canceledRequest.isTesting) {
+      createdRequest = await this.addTestingRequest(canceledRequest.userId, listId, canceledRequest.group);
+    } else {
+      createdRequest = await this.requestWaterTanker(listId, canceledRequest.group);
+    }
 
     const canceledListName = await db
       .select({
@@ -276,7 +291,7 @@ export default class WaterTankerList {
     });
   }
 
-  public async addTestingRequest(house: number, listId: number) {
+  public async addTestingRequest(house: number, listId: number, group: Group) {
     const isAdmin = await this.isAdmin();
 
     if (!isAdmin) {
@@ -303,6 +318,7 @@ export default class WaterTankerList {
     const waterTankerRequestTable = await db
       .insert(privateWaterTankerRequestTable)
       .values({
+        group,
         isTesting: true,
         testerUserId: this.user.id,
         userId: house,
@@ -311,5 +327,64 @@ export default class WaterTankerList {
       .returning();
 
     return waterTankerRequestTable[0];
+  }
+
+  public async moveRequestToGroup(group: Group, requestUUID?: string) {
+    const isAdmin = await this.isAdmin();
+
+    let requestId: number | null = null;
+
+    if (isAdmin && requestUUID) {
+      const waterTankerRequestTable = await db
+        .select()
+        .from(privateWaterTankerRequestTable)
+        .where(eq(privateWaterTankerRequestTable.uuid, requestUUID))
+        .limit(1);
+
+      requestId = waterTankerRequestTable[0]?.id ?? null;
+    } else if (!isAdmin && requestId) {
+      throw new Error('Forbidden');
+    } else {
+      const openRequest = await this.myOpenRequest();
+
+      requestId = openRequest?.id ?? null;
+    }
+
+    if (!requestId) {
+      throw new Error('Forbidden');
+    }
+
+    const currentTankerRequestTable = await db
+      .select({
+        group: privateWaterTankerRequestTable.group,
+        list: privateWaterTankerRequestListTable.name,
+      })
+      .from(privateWaterTankerRequestTable)
+      .where(eq(privateWaterTankerRequestTable.id, requestId))
+      .innerJoin(
+        privateWaterTankerRequestListTable,
+        eq(privateWaterTankerRequestTable.waterTankerRequestListId, privateWaterTankerRequestListTable.id),
+      )
+      .limit(1);
+
+    const waterTankerRequestTable = await db
+      .update(privateWaterTankerRequestTable)
+      .set({
+        group,
+      })
+      .where(eq(privateWaterTankerRequestTable.id, requestId))
+      .returning();
+
+    await db.insert(hiddenWaterTankerRequestHRTable).values({
+      userId: this.user.id,
+      waterTankerRequestId: waterTankerRequestTable[0].id,
+      // TODO: add group to hiddenWaterTankerRequestHRTable
+    });
+
+    await db.insert(privateWaterTankerRequestCommentsTable).values({
+      comment: `Se movió del grupo ${currentTankerRequestTable[0].group} al grupo ${group} dentro de la lista ${currentTankerRequestTable[0].list}`,
+      userId: 0,
+      waterTankerRequestId: waterTankerRequestTable[0].id,
+    });
   }
 }

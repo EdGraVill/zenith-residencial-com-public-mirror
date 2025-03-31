@@ -10,6 +10,7 @@ export const waterTankerRequestComment = z.object({
 export const requestSchema = z.object({
   comments: z.array(waterTankerRequestComment),
   createdAt: z.preprocess((val) => new Date(val as string), z.date()),
+  group: z.enum(['A', 'B', 'C', 'D', 'E', 'F', 'G']),
   house: z.number(),
   isTesting: z.boolean(),
   list: z.string(),
@@ -27,3 +28,6 @@ export const listSchema = z.object({
 })
 
 export const listsSchema = z.record(listSchema);
+
+export const groups = z.enum(['A', 'B', 'C', 'D', 'E', 'F', 'G']);
+export type Group = z.infer<typeof groups>;

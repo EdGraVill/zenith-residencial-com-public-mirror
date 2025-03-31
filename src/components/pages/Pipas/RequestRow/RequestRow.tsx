@@ -1,10 +1,9 @@
-import { formatDistanceToNow } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { type FC } from 'react';
 import type { z } from 'zod';
 
 import Actions from './Actions';
 import BadgeStatus from './BadgeStatus';
+import RelativeTimeToNow from '@/components/common/RelativeTimeToNow';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 import type { listsSchema, requestSchema } from '@/lib/schemas';
@@ -13,6 +12,7 @@ import { cn } from '@/lib/utils';
 interface Props {
   currentUserId: number;
   isAdmin: boolean;
+  isFiltered: boolean;
   lists: z.infer<typeof listsSchema>;
   request: z.infer<typeof requestSchema>;
 }
@@ -49,15 +49,22 @@ const RequestRow: FC<Props> = (props) => {
       </TableCell>
       <TableCell className="w-[180px]">
         <div className="flex flex-col items-center justify-center gap-y-1">
-          <BadgeStatus
-            className={cn({
-              'text-[10px]': request.requestStatus !== 'pending',
-            })}
-            status={request.requestStatus}
-          />
+          <div>
+            <BadgeStatus
+              className={cn({
+                'text-[10px]': request.requestStatus !== 'pending',
+              })}
+              status={request.requestStatus}
+            />
+            {!props.isFiltered && (
+              <Badge className="ml-2" variant="outline">
+                {request.group}
+              </Badge>
+            )}
+          </div>
           {request.requestStatus === 'pending' && (
             <span className="text-[10px] font-light text-balance text-center">
-              Desde hace {formatDistanceToNow(request.createdAt, { locale: es })}
+              Desde hace {<RelativeTimeToNow date={request.createdAt} />}
             </span>
           )}
         </div>

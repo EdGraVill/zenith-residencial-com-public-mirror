@@ -1,11 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { formatDistanceToNow, subHours } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { subHours } from 'date-fns';
 import type { Dispatch, FC, SetStateAction } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { addComment } from '../actions';
+import RelativeTimeToNow from '@/components/common/RelativeTimeToNow';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
@@ -67,7 +67,7 @@ export const Comments: FC<Props> = ({ currentUserId, isOpen, request, setOpenSta
                 <span className="w-full text-xs text-center" key={id}>
                   {comment} <br />
                   <span className="text-[8px]">
-                    {formatDistanceToNow(subHours(createdAt, 6), { addSuffix: true, locale: es })}
+                    {<RelativeTimeToNow addSuffix={true} date={subHours(createdAt, 6)} />}
                   </span>
                 </span>
               ) : (
@@ -82,7 +82,7 @@ export const Comments: FC<Props> = ({ currentUserId, isOpen, request, setOpenSta
                   <span className="text-sm bg-accent py-2 px-4">
                     {comment.trim().replace(new RegExp(`${forbiddenWords.join('|')}`, 'gi'), '🤬')}
                     <span className="block w-full text-end text-[8px]">
-                      {formatDistanceToNow(subHours(createdAt, 6), { addSuffix: true, locale: es })}
+                      {<RelativeTimeToNow addSuffix={true} date={subHours(createdAt, 6)} />}
                     </span>
                   </span>
                   {currentUserId === author && <span className="text-xs text-muted-foreground">:Tú</span>}

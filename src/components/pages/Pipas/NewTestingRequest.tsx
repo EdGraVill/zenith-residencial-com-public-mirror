@@ -20,9 +20,13 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { listsSchema } from '@/lib/schemas';
+import type { Group, listsSchema } from '@/lib/schemas';
 
 const formSchema = z.object({
+  group: z.enum(['A', 'B', 'C', 'D', 'E', 'F', 'G'], {
+    invalid_type_error: 'Grupo requerido',
+    required_error: 'Grupo requerido',
+  }),
   house: z.preprocess(
     (val) => parseInt(val as string, 10) || 0,
     z.number().min(1, 'La casa es requerida').max(171, 'La casa no puede ser mayor a 171'),
@@ -43,12 +47,12 @@ const NewTestingRequest: FC<Props> = ({ isAdmin, lists }) => {
   });
 
   useEffect(() => {
-    form.reset({ house: '' as unknown as number, listId: '' as unknown as number });
+    form.reset({ group: '' as Group, house: '' as unknown as number, listId: '' as unknown as number });
   }, [isOpen]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await addTestingRequest(values.house, values.listId);
+      await addTestingRequest(values.house, values.listId, values.group);
       setIsOpen(false);
     } catch (error) {
       form.setError('house', { message: 'La casa ya está en una lista' });
@@ -91,10 +95,7 @@ const NewTestingRequest: FC<Props> = ({ isAdmin, lists }) => {
                 render={({ field }) => (
                   <FormItem className="flex-1">
                     <FormLabel>Lista</FormLabel>
-                    <Select
-                      defaultValue={`${field.value}`}
-                      onValueChange={(value) => field.onChange(parseInt(value, 10))}
-                    >
+                    <Select onValueChange={(value) => field.onChange(parseInt(value, 10))} value={`${field.value}`}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecciona una lista" />
@@ -104,6 +105,30 @@ const NewTestingRequest: FC<Props> = ({ isAdmin, lists }) => {
                         {Object.keys(lists).map((listName) => (
                           <SelectItem key={listName} value={`${lists[listName].id}`}>
                             {listName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="group"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>Grupo</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Grupo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((letter) => (
+                          <SelectItem key={letter} value={letter}>
+                            {letter}
                           </SelectItem>
                         ))}
                       </SelectContent>

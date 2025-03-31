@@ -2,6 +2,7 @@
 
 import User from '@/controllers/User';
 import WaterTankerList from '@/controllers/WaterTankerList';
+import type { Group } from '@/lib/schemas';
 
 export async function auth(phone: string) {
   try {
@@ -17,7 +18,7 @@ export async function auth(phone: string) {
   }
 }
 
-export async function request(listId: number) {
+export async function request(listId: number, group: string) {
   const user = await User.getUserByCookies();
 
   if (!user) {
@@ -27,7 +28,7 @@ export async function request(listId: number) {
   try {
     const waterTankerList = new WaterTankerList(user);
 
-    await waterTankerList.requestWaterTanker(listId);
+    await waterTankerList.requestWaterTanker(listId, group as Group);
     const request = await waterTankerList.myOpenRequestPublic();
 
     return request;
@@ -76,7 +77,7 @@ export async function cancelRequest(requestUUID: string) {
   }
 }
 
-export async function moveRequest(listId: number) {
+export async function moveRequest(listId: number, requestUUID?: string) {
   const user = await User.getUserByCookies();
 
   if (!user) {
@@ -86,8 +87,11 @@ export async function moveRequest(listId: number) {
   try {
     const waterTankerList = new WaterTankerList(user);
 
-    await waterTankerList.moveRequestToList(listId);
+    console.log('Moving request', listId, requestUUID);
+
+    await waterTankerList.moveRequestToList(listId, requestUUID);
   } catch (error) {
+    console.error('Error moving request', error);
     return null;
   }
 }
@@ -168,7 +172,7 @@ export async function addComment(comment: string, requestUUID: string) {
   }
 }
 
-export async function addTestingRequest(house: number, listId: number) {
+export async function addTestingRequest(house: number, listId: number, group: string) {
   const user = await User.getUserByCookies();
 
   if (!user) {
@@ -177,5 +181,32 @@ export async function addTestingRequest(house: number, listId: number) {
 
   const waterTankerList = new WaterTankerList(user);
 
-  await waterTankerList.addTestingRequest(house, listId);
+  await waterTankerList.addTestingRequest(house, listId, group as Group);
+}
+
+export async function moveRequestToGroup(group: string, requestUUID: string) {
+  const supportedGroups = ['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (!supportedGroups.includes(group as any)) {
+    return null;
+  }
+
+  const user = await User.getUserByCookies();
+
+  if (!user) {
+    return null;
+  }
+
+  try {
+    const waterTankerList = new WaterTankerList(user);
+
+    if (await waterTankerList.isAdmin()) {
+      await waterTankerList.moveRequestToGroup(group as (typeof supportedGroups)[number], requestUUID);
+    } else {
+      await waterTankerList.moveRequestToGroup(group as (typeof supportedGroups)[number]);
+    }
+  } catch (error) {
+    return null;
+  }
 }
