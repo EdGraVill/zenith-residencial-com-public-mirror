@@ -1,16 +1,28 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FC } from 'react';
-import type { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 import { cancelRequest, request } from './actions';
+import { getBestGroup } from './utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { privateWaterTankerRequestView } from '@/db/privateViews';
-import type { listsSchema } from '@/lib/schemas';
+import type { Group, listsSchema } from '@/lib/schemas';
+
+const formSchema = z.object({
+  group: z.enum(['A', 'B', 'C', 'D', 'E', 'F', 'G'], {
+    invalid_type_error: 'Grupo requerido',
+    required_error: 'Grupo requerido',
+  }),
+  list: z.string({ required_error: 'Lista requerida' }),
+});
 
 interface Props {
   lists: z.infer<typeof listsSchema>;
@@ -18,32 +30,43 @@ interface Props {
 }
 
 const MyRequestAction: FC<Props> = ({ lists, openRequest }) => {
-  const [isLoading, setLoadingState] = useState(false);
-  const [listName, setListName] = useState<string>('');
+  const [isRemoving, setRemovingState] = useState(false);
 
-  function onRequest() {
-    const list = lists[listName];
+  const form = useForm<z.infer<typeof formSchema>>({
+    defaultValues: {
+      group: openRequest?.group as Group,
+      list: openRequest?.list,
+    },
+    disabled: !!openRequest,
+    resolver: zodResolver(formSchema),
+  });
 
-    if (!list) {
-      return;
+  useEffect(() => {
+    if (!openRequest) {
+      form.reset({ group: '' as Group, list: '' });
     }
+  }, [openRequest]);
 
-    setLoadingState(true);
-    request(list.id)
-      .then((response) => {
-        if (!response) {
-          return;
-        }
+  useEffect(() => {
+    setRemovingState(false);
+  }, [lists]);
 
-        setListName('');
-      })
-      .finally(() => setLoadingState(false));
+  useEffect(() => {
+    const listName = form.watch('list');
+
+    if (listName) {
+      form.setValue('group', getBestGroup(lists, listName));
+    }
+  }, [form.watch('list')]);
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    await request(lists[values.list].id, values.group);
   }
 
   function onRemove() {
-    setLoadingState(true);
     if (openRequest) {
-      cancelRequest(openRequest.uuid).finally(() => setLoadingState(false));
+      setRemovingState(true);
+      cancelRequest(openRequest.uuid).finally(() => form.reset({ group: '' as Group, list: '' }));
     }
   }
 
@@ -62,46 +85,102 @@ const MyRequestAction: FC<Props> = ({ lists, openRequest }) => {
 
   return (
     <Card className="w-[405px]">
-      <CardContent className="flex flex-row justify-between items-center">
-        <div>
-          <CardTitle className="flex">{openRequest ? 'Casa anotada' : 'Anotar mi casa'}</CardTitle>
-          <CardDescription className="flex">en la lista:</CardDescription>
-        </div>
-        <Select disabled={!!openRequest} onValueChange={setListName} value={openRequest ? openRequest.list : listName}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Selecciona una lista" />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.keys(lists).map((listName) => (
-              <SelectItem key={listName} value={listName}>
-                {listName}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </CardContent>
-      <CardFooter className="flex justify-center gap-x-4">
-        {openRequest ? (
-          <>
-            <CardAction>
-              <Button disabled={isLoading} onClick={onGoToList} variant="outline">
-                Ver lista
-              </Button>
-            </CardAction>
-            <CardAction>
-              <Button disabled={isLoading} onClick={onRemove} variant="destructive">
-                Quitarme
-              </Button>
-            </CardAction>
-          </>
-        ) : (
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <CardContent className="grid grid-cols-2">
+            <div className="flex flex-col">
+              <CardTitle className="flex text-nowrap">{openRequest ? 'Casa anotada' : 'Anotar mi casa'}</CardTitle>
+              <CardDescription className="flex">en la lista:</CardDescription>
+            </div>
+            <div className="flex flex-col items-end">
+              <FormField
+                control={form.control}
+                name="list"
+                render={({ field }) => (
+                  <FormItem>
+                    <Select disabled={!!openRequest} onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona una lista" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.keys(lists).map((listName) => (
+                          <SelectItem key={listName} value={listName}>
+                            {listName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex flex-row items-center gap-x-3">
+                <span className="text-xs">en el grupo</span>
+                <FormField
+                  control={form.control}
+                  name="group"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Select disabled={!!openRequest} onValueChange={field.onChange} value={form.watch('group')}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Grupo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((letter) => (
+                            <SelectItem key={letter} value={letter}>
+                              {letter}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+          </CardContent>
+          {!openRequest && (
+            <CardFooter className="flex justify-center gap-x-4 mt-6">
+              <CardAction>
+                <Button disabled={form.formState.isSubmitting} type="submit">
+                  {form.formState.isSubmitting ? (
+                    <>
+                      Anotándome <Loader2 className="animate-spin" />
+                    </>
+                  ) : (
+                    'Anotarme'
+                  )}
+                </Button>
+              </CardAction>
+            </CardFooter>
+          )}
+        </form>
+      </Form>
+      {openRequest && (
+        <CardFooter className="flex justify-center gap-x-4">
           <CardAction>
-            <Button disabled={isLoading} onClick={onRequest}>
-              {isLoading ? <Loader2 className="animate-spin" /> : 'Anotarme'}
+            <Button disabled={isRemoving} onClick={onGoToList} variant="outline">
+              Ver lista
             </Button>
           </CardAction>
-        )}
-      </CardFooter>
+          <CardAction>
+            <Button disabled={isRemoving} onClick={onRemove} variant="destructive">
+              {isRemoving ? (
+                <>
+                  Quitándome <Loader2 className="animate-spin" />
+                </>
+              ) : (
+                'Quitarme'
+              )}
+            </Button>
+          </CardAction>
+        </CardFooter>
+      )}
     </Card>
   );
 };

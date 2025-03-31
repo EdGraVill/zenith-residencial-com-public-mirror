@@ -33,6 +33,7 @@ export const privateWaterTankerRequestView = privateSchema.view('v_water_tanker_
         '[]'::json
       )`.as('comments'),
       createdAt: privateWaterTankerRequestTable.createdAt,
+      group: privateWaterTankerRequestTable.group,
       house: publicUsersTable.house,
       isTesting: privateWaterTankerRequestTable.isTesting,
       list: sql<string>`${privateWaterTankerRequestListTable.name}`.as('list'),
@@ -66,6 +67,7 @@ export const privateWaterTankerRequestView = privateSchema.view('v_water_tanker_
     )
     .groupBy(
       privateWaterTankerRequestTable.createdAt,
+      privateWaterTankerRequestTable.group,
       publicUsersTable.house,
       privateWaterTankerRequestTable.isTesting,
       privateWaterTankerRequestListTable.name,
