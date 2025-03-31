@@ -69,7 +69,7 @@ const Actions: FC<Props> = ({ currentUserId, isAdmin, lists, request }) => {
     label: 'Ver comentarios',
     shortcut: (
       <span className="flex flex-row text-sm items-center">
-        {request.comments.length} <MessageSquareText />
+        {request.comments.filter(({ author }) => author).length} <MessageSquareText />
       </span>
     ),
     topSeparator: true,
