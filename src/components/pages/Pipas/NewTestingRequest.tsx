@@ -6,7 +6,7 @@ import { type FC, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { registerUser } from './actions';
+import { addTestingRequest } from './actions';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -19,23 +19,23 @@ import {
 } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { listsSchema } from '@/lib/schemas';
 
 const formSchema = z.object({
   house: z.preprocess(
     (val) => parseInt(val as string, 10) || 0,
     z.number().min(1, 'La casa es requerida').max(171, 'La casa no puede ser mayor a 171'),
   ),
-  phone: z
-    .string()
-    .min(10, 'El número de teléfono debe tener al menos 10 dígitos')
-    .max(10, 'El número de teléfono no puede tener más de 10 dígitos'),
+  listId: z.number({ required_error: 'La lista es requerida' }),
 });
 
 interface Props {
   isAdmin: boolean;
+  lists: z.infer<typeof listsSchema>;
 }
 
-const NewUserAction: FC<Props> = ({ isAdmin }) => {
+const NewTestingRequest: FC<Props> = ({ isAdmin, lists }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -43,12 +43,16 @@ const NewUserAction: FC<Props> = ({ isAdmin }) => {
   });
 
   useEffect(() => {
-    form.reset({ house: '' as unknown as number, phone: '' });
+    form.reset({ house: '' as unknown as number, listId: '' as unknown as number });
   }, [isOpen]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await registerUser(values.phone, values.house);
-    setIsOpen(false);
+    try {
+      await addTestingRequest(values.house, values.listId);
+      setIsOpen(false);
+    } catch (error) {
+      form.setError('house', { message: 'La casa ya está en una lista' });
+    }
   }
 
   if (!isAdmin) {
@@ -58,16 +62,16 @@ const NewUserAction: FC<Props> = ({ isAdmin }) => {
   return (
     <Dialog onOpenChange={setIsOpen} open={isOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">Agregar usuario</Button>
+        <Button variant="outline">Agregar prueba</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Agregar usuario</DialogTitle>
-          <DialogDescription>Asociar teléfono con casa</DialogDescription>
+          <DialogTitle>Agregar solicitud de prueba</DialogTitle>
+          <DialogDescription>Crear una solicitud de prueba en nombre de otra casa</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <div className="flex flex-row gap-4">
+            <div className="flex flex-row gap-4 items-start">
               <FormField
                 control={form.control}
                 name="house"
@@ -83,13 +87,27 @@ const NewUserAction: FC<Props> = ({ isAdmin }) => {
               />
               <FormField
                 control={form.control}
-                name="phone"
+                name="listId"
                 render={({ field }) => (
                   <FormItem className="flex-1">
-                    <FormLabel>Teléfono</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
+                    <FormLabel>Lista</FormLabel>
+                    <Select
+                      defaultValue={`${field.value}`}
+                      onValueChange={(value) => field.onChange(parseInt(value, 10))}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona una lista" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.keys(lists).map((listName) => (
+                          <SelectItem key={listName} value={`${lists[listName].id}`}>
+                            {listName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -98,7 +116,7 @@ const NewUserAction: FC<Props> = ({ isAdmin }) => {
             <FormMessage />
             <DialogFooter className="mt-6 flex justify-end">
               <Button disabled={form.formState.isSubmitting} type="submit">
-                Registrar {form.formState.isSubmitting && <Loader2 className="animate-spin" />}
+                Anotar {form.formState.isSubmitting && <Loader2 className="animate-spin" />}
               </Button>
             </DialogFooter>
           </form>
@@ -108,4 +126,4 @@ const NewUserAction: FC<Props> = ({ isAdmin }) => {
   );
 };
 
-export default NewUserAction;
+export default NewTestingRequest;

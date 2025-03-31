@@ -31,7 +31,6 @@ interface Props {
 }
 
 const NewListAction: FC<Props> = ({ isAdmin }) => {
-  const [isLoading, setLoadingState] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -46,12 +45,9 @@ const NewListAction: FC<Props> = ({ isAdmin }) => {
     form.reset({ description: '', name: '' });
   }, [isOpen]);
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    setLoadingState(true);
-    createList(values.name, values.description).finally(() => {
-      setLoadingState(false);
-      setIsOpen(false);
-    });
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    await createList(values.name, values.description);
+    setIsOpen(false);
   }
 
   if (!isAdmin) {
@@ -101,8 +97,8 @@ const NewListAction: FC<Props> = ({ isAdmin }) => {
               <FormMessage />
             </div>
             <DialogFooter className="mt-6 flex justify-end">
-              <Button disabled={isLoading} type="submit">
-                Crear {isLoading && <Loader2 className="animate-spin" />}
+              <Button disabled={form.formState.isSubmitting} type="submit">
+                Crear {form.formState.isSubmitting && <Loader2 className="animate-spin" />}
               </Button>
             </DialogFooter>
           </form>

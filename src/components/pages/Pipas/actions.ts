@@ -167,3 +167,15 @@ export async function addComment(comment: string, requestUUID: string) {
     return null;
   }
 }
+
+export async function addTestingRequest(house: number, listId: number) {
+  const user = await User.getUserByCookies();
+
+  if (!user) {
+    return null;
+  }
+
+  const waterTankerList = new WaterTankerList(user);
+
+  await waterTankerList.addTestingRequest(house, listId);
+}

@@ -1,0 +1,2 @@
+ALTER TABLE "private"."water_tanker_request" ADD COLUMN "tester_user_id" integer;--> statement-breakpoint
+ALTER TABLE "private"."water_tanker_request" ADD CONSTRAINT "water_tanker_request_tester_user_id_users_id_fk" FOREIGN KEY ("tester_user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
