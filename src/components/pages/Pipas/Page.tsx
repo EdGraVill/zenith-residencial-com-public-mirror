@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import Auth from './Auth';
 import Pipas from './Pipas';
 import User from '@/controllers/User';
-import WaterTankerList from '@/controllers/WaterTankerList';
+import WaterTanker from '@/controllers/WaterTankerList';
 
 const PipasPage: FC = async () => {
   const user = await User.getUserByCookies();
@@ -12,15 +12,15 @@ const PipasPage: FC = async () => {
     return <Auth />;
   }
 
-  const lists = await WaterTankerList.getLists();
-  const waterTankerList = new WaterTankerList(user);
+  const lists = await WaterTanker.getWaterTankers();
+  const waterTanker = new WaterTanker(user);
 
   return (
     <Pipas
       currentUserId={user.id}
-      isAdmin={await waterTankerList.isAdmin()}
-      lists={lists}
-      ownRequest={await waterTankerList.myOpenRequestPublic()}
+      isAdmin={await waterTanker.isAdmin()}
+      openRequest={await waterTanker.myOpenRequestPublic()}
+      waterTankers={lists}
     />
   );
 };

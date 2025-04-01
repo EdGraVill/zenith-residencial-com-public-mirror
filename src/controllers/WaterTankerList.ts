@@ -6,42 +6,42 @@ import { db } from '@/db';
 import { hiddenWaterTankerRequestHRTable } from '@/db/hiddenSchema';
 import {
   privateWaterTankerRequestCommentsTable,
-  privateWaterTankerRequestListTable,
   privateWaterTankerRequestStatusEnum,
   privateWaterTankerRequestTable,
+  privateWaterTankerTable,
 } from '@/db/privateSchema';
 import { privateWaterTankerRequestView } from '@/db/privateViews';
-import type { Group } from '@/lib/schemas';
+import type { List } from '@/lib/schemas';
 
-export type WaterTankerRequestsListed = Record<
+export type WaterTankers = Record<
   string,
   {
     description: string;
     id: number;
-    list: Array<typeof privateWaterTankerRequestView.$inferSelect>;
     name: string;
+    requests: Array<typeof privateWaterTankerRequestView.$inferSelect>;
   }
 >;
 
-export default class WaterTankerList {
-  public static async getLists(): Promise<WaterTankerRequestsListed> {
-    const waterTankerRequestListTable = await db.select().from(privateWaterTankerRequestListTable);
+export default class WaterTanker {
+  public static async getWaterTankers(): Promise<WaterTankers> {
+    const waterTankerTable = await db.select().from(privateWaterTankerTable);
 
     const waterTankerRequestView = await db.select().from(privateWaterTankerRequestView);
-    const waterTankerRequestsListed: WaterTankerRequestsListed = waterTankerRequestListTable.reduce(
-      (acc, list) => ({
+    const waterTankers: WaterTankers = waterTankerTable.reduce(
+      (acc, waterTanker) => ({
         ...acc,
-        [list.name]: {
-          description: list.description,
-          id: list.id,
-          list: waterTankerRequestView.filter((l) => l.list === list.name),
-          name: list.name,
+        [waterTanker.name]: {
+          description: waterTanker.description,
+          id: waterTanker.id,
+          name: waterTanker.name,
+          requests: waterTankerRequestView.filter((request) => request.waterTankerName === waterTanker.name),
         },
       }),
       {},
     );
 
-    return waterTankerRequestsListed;
+    return waterTankers;
   }
 
   constructor(public readonly user: User) {}
@@ -50,25 +50,25 @@ export default class WaterTankerList {
     return this.user.canBypass();
   }
 
-  public async createList(name: string, description: string) {
+  public async createWaterTanker(name: string, description: string) {
     const isAdmin = await this.isAdmin();
 
     if (!isAdmin) {
       throw new Error('Forbidden');
     }
 
-    const waterTankerListTable = await db
-      .insert(privateWaterTankerRequestListTable)
+    const waterTankerTable = await db
+      .insert(privateWaterTankerTable)
       .values({
         description,
         name,
       })
       .returning();
 
-    return waterTankerListTable[0];
+    return waterTankerTable[0];
   }
 
-  public async updateList(id: number, name?: string, description?: string) {
+  public async updateWaterTanker(id: number, name?: string, description?: string) {
     const isAdmin = await this.isAdmin();
 
     if (!isAdmin) {
@@ -79,43 +79,43 @@ export default class WaterTankerList {
       throw new Error('Forbidden');
     }
 
-    const waterTankerListTable = await db
-      .update(privateWaterTankerRequestListTable)
+    const waterTankerTable = await db
+      .update(privateWaterTankerTable)
       .set({
         ...(name ? { name } : {}),
         ...(description ? { description } : {}),
       })
-      .where(eq(privateWaterTankerRequestListTable.id, id))
+      .where(eq(privateWaterTankerTable.id, id))
       .returning();
 
-    return waterTankerListTable[0];
+    return waterTankerTable[0];
   }
 
-  public async removeList(id: number) {
+  public async removeWaterTanker(id: number) {
     const isAdmin = await this.isAdmin();
 
     if (!isAdmin) {
       throw new Error('Forbidden');
     }
 
-    const waterTankerListTableToDelete = await db
+    const waterTankerTableToDelete = await db
       .select()
-      .from(privateWaterTankerRequestListTable)
-      .where(eq(privateWaterTankerRequestListTable.id, id))
+      .from(privateWaterTankerTable)
+      .where(eq(privateWaterTankerTable.id, id))
       .limit(1);
 
     const entropy = new Entropy();
 
-    const waterTankerListTable = await db
-      .update(privateWaterTankerRequestListTable)
+    const waterTankerTable = await db
+      .update(privateWaterTankerTable)
       .set({
         isActive: false,
-        name: `deleted_${entropy.smallID()}_${waterTankerListTableToDelete[0].name}`,
+        name: `deleted_${entropy.smallID()}_${waterTankerTableToDelete[0].name}`,
       })
-      .where(eq(privateWaterTankerRequestListTable.id, id))
+      .where(eq(privateWaterTankerTable.id, id))
       .returning();
 
-    return waterTankerListTable[0];
+    return waterTankerTable[0];
   }
 
   public async myOpenRequest() {
@@ -126,7 +126,7 @@ export default class WaterTankerList {
         and(
           eq(privateWaterTankerRequestTable.userId, this.user.id),
           eq(privateWaterTankerRequestTable.isActive, true),
-          eq(privateWaterTankerRequestTable.requestStatus, privateWaterTankerRequestStatusEnum.enumValues[0]),
+          eq(privateWaterTankerRequestTable.status, privateWaterTankerRequestStatusEnum.enumValues[0]),
           eq(privateWaterTankerRequestTable.isTesting, false),
         ),
       )
@@ -146,7 +146,7 @@ export default class WaterTankerList {
       .where(
         and(
           eq(privateWaterTankerRequestView.house, this.user.id),
-          eq(privateWaterTankerRequestView.requestStatus, privateWaterTankerRequestStatusEnum.enumValues[0]),
+          eq(privateWaterTankerRequestView.status, privateWaterTankerRequestStatusEnum.enumValues[0]),
           eq(privateWaterTankerRequestView.isTesting, false),
         ),
       )
@@ -159,7 +159,7 @@ export default class WaterTankerList {
     return alreadyInWaterTankerRequestView[0];
   }
 
-  public async requestWaterTanker(listId: number, group: Group) {
+  public async createRequest(waterTankerId: number, list: List) {
     const openRequest = await this.myOpenRequest();
 
     if (openRequest) {
@@ -169,13 +169,16 @@ export default class WaterTankerList {
     const waterTankerRequestTable = await db
       .insert(privateWaterTankerRequestTable)
       .values({
-        group,
+        list,
         userId: this.user.id,
-        waterTankerRequestListId: listId,
+        waterTankerId,
       })
       .returning();
 
     await db.insert(hiddenWaterTankerRequestHRTable).values({
+      isTesting: false,
+      list,
+      status: privateWaterTankerRequestStatusEnum.enumValues[0],
       userId: this.user.id,
       waterTankerRequestId: waterTankerRequestTable[0].id,
     });
@@ -211,13 +214,15 @@ export default class WaterTankerList {
     const waterTankerRequestTable = await db
       .update(privateWaterTankerRequestTable)
       .set({
-        requestStatus: privateWaterTankerRequestStatusEnum.enumValues[1],
+        status: privateWaterTankerRequestStatusEnum.enumValues[1],
       })
       .where(eq(privateWaterTankerRequestTable.id, requestId))
       .returning();
 
     await db.insert(hiddenWaterTankerRequestHRTable).values({
-      requestStatus: privateWaterTankerRequestStatusEnum.enumValues[1],
+      isTesting: waterTankerRequestTable[0].isTesting,
+      list: waterTankerRequestTable[0].list,
+      status: privateWaterTankerRequestStatusEnum.enumValues[1],
       userId: this.user.id,
       waterTankerRequestId: waterTankerRequestTable[0].id,
     });
@@ -225,7 +230,7 @@ export default class WaterTankerList {
     return waterTankerRequestTable[0];
   }
 
-  public async cancelRequest(isRemoved = false, requestUUID?: string) {
+  public async cancelRequest(wasMoved = false, requestUUID?: string) {
     const isAdmin = await this.isAdmin();
 
     let requestId: number | null = null;
@@ -253,14 +258,16 @@ export default class WaterTankerList {
     const waterTankerRequestTable = await db
       .update(privateWaterTankerRequestTable)
       .set({
-        isActive: !isRemoved,
-        requestStatus: privateWaterTankerRequestStatusEnum.enumValues[2],
+        isActive: !wasMoved,
+        status: privateWaterTankerRequestStatusEnum.enumValues[2],
       })
       .where(eq(privateWaterTankerRequestTable.id, requestId))
       .returning();
 
     await db.insert(hiddenWaterTankerRequestHRTable).values({
-      requestStatus: privateWaterTankerRequestStatusEnum.enumValues[2],
+      isTesting: waterTankerRequestTable[0].isTesting,
+      list: waterTankerRequestTable[0].list,
+      status: privateWaterTankerRequestStatusEnum.enumValues[2],
       userId: this.user.id,
       waterTankerRequestId: waterTankerRequestTable[0].id,
     });
@@ -268,7 +275,7 @@ export default class WaterTankerList {
     return waterTankerRequestTable[0];
   }
 
-  public async moveRequestToList(listId: number, requestUUID?: string) {
+  public async moveRequestToWaterTanker(waterTankerId: number, requestUUID?: string) {
     if (!this.isAdmin() && requestUUID) {
       throw new Error('Forbidden');
     }
@@ -286,23 +293,24 @@ export default class WaterTankerList {
     let createdRequest: typeof privateWaterTankerRequestTable.$inferSelect;
 
     if (canceledRequest.isTesting) {
-      createdRequest = await this.addTestingRequest(canceledRequest.userId, listId, canceledRequest.group);
+      createdRequest = await this.addTestingRequest(canceledRequest.userId, waterTankerId, canceledRequest.list);
     } else {
-      createdRequest = await this.requestWaterTanker(listId, canceledRequest.group);
+      createdRequest = await this.createRequest(waterTankerId, canceledRequest.list);
     }
 
-    const canceledListName = await db
+    const canceledWaterTanker = await db
       .select({
-        name: privateWaterTankerRequestListTable.name,
+        name: privateWaterTankerTable.name,
       })
-      .from(privateWaterTankerRequestListTable)
-      .where(eq(privateWaterTankerRequestListTable.id, canceledRequest.waterTankerRequestListId));
-    const createdListName = await db
+      .from(privateWaterTankerTable)
+      .where(eq(privateWaterTankerTable.id, canceledRequest.waterTankerId));
+
+    const createdWaterTanker = await db
       .select({
-        name: privateWaterTankerRequestListTable.name,
+        name: privateWaterTankerTable.name,
       })
-      .from(privateWaterTankerRequestListTable)
-      .where(eq(privateWaterTankerRequestListTable.id, createdRequest.waterTankerRequestListId));
+      .from(privateWaterTankerTable)
+      .where(eq(privateWaterTankerTable.id, createdRequest.waterTankerId));
 
     await db
       .update(privateWaterTankerRequestCommentsTable)
@@ -312,7 +320,7 @@ export default class WaterTankerList {
       .where(eq(privateWaterTankerRequestCommentsTable.waterTankerRequestId, canceledRequest.id));
 
     await db.insert(privateWaterTankerRequestCommentsTable).values({
-      comment: `Se movió de la lista ${canceledListName[0].name} a la lista ${createdListName[0].name}`,
+      comment: `Se movió de la pipa ${canceledWaterTanker[0].name} a la pipa ${createdWaterTanker[0].name}`,
       userId: 0,
       waterTankerRequestId: createdRequest.id,
     });
@@ -342,7 +350,7 @@ export default class WaterTankerList {
     });
   }
 
-  public async addTestingRequest(house: number, listId: number, group: Group) {
+  public async addTestingRequest(house: number, waterTankerId: number, list: List) {
     const isAdmin = await this.isAdmin();
 
     if (!isAdmin) {
@@ -356,7 +364,7 @@ export default class WaterTankerList {
         and(
           eq(privateWaterTankerRequestTable.userId, house),
           eq(privateWaterTankerRequestTable.isActive, true),
-          eq(privateWaterTankerRequestTable.requestStatus, privateWaterTankerRequestStatusEnum.enumValues[0]),
+          eq(privateWaterTankerRequestTable.status, privateWaterTankerRequestStatusEnum.enumValues[0]),
           eq(privateWaterTankerRequestTable.isTesting, true),
         ),
       )
@@ -369,18 +377,18 @@ export default class WaterTankerList {
     const waterTankerRequestTable = await db
       .insert(privateWaterTankerRequestTable)
       .values({
-        group,
         isTesting: true,
+        list,
         testerUserId: this.user.id,
         userId: house,
-        waterTankerRequestListId: listId,
+        waterTankerId,
       })
       .returning();
 
     return waterTankerRequestTable[0];
   }
 
-  public async moveRequestToGroup(group: Group, requestUUID?: string) {
+  public async moveRequestToList(list: List, requestUUID?: string) {
     const isAdmin = await this.isAdmin();
 
     let requestId: number | null = null;
@@ -407,33 +415,32 @@ export default class WaterTankerList {
 
     const currentTankerRequestTable = await db
       .select({
-        group: privateWaterTankerRequestTable.group,
-        list: privateWaterTankerRequestListTable.name,
+        list: privateWaterTankerRequestTable.list,
+        waterTanker: privateWaterTankerTable.name,
       })
       .from(privateWaterTankerRequestTable)
       .where(eq(privateWaterTankerRequestTable.id, requestId))
-      .innerJoin(
-        privateWaterTankerRequestListTable,
-        eq(privateWaterTankerRequestTable.waterTankerRequestListId, privateWaterTankerRequestListTable.id),
-      )
+      .innerJoin(privateWaterTankerTable, eq(privateWaterTankerRequestTable.waterTankerId, privateWaterTankerTable.id))
       .limit(1);
 
     const waterTankerRequestTable = await db
       .update(privateWaterTankerRequestTable)
       .set({
-        group,
+        list,
       })
       .where(eq(privateWaterTankerRequestTable.id, requestId))
       .returning();
 
     await db.insert(hiddenWaterTankerRequestHRTable).values({
+      isTesting: waterTankerRequestTable[0].isTesting,
+      list,
+      status: waterTankerRequestTable[0].status,
       userId: this.user.id,
       waterTankerRequestId: waterTankerRequestTable[0].id,
-      // TODO: add group to hiddenWaterTankerRequestHRTable
     });
 
     await db.insert(privateWaterTankerRequestCommentsTable).values({
-      comment: `Se movió del grupo ${currentTankerRequestTable[0].group} al grupo ${group} dentro de la lista ${currentTankerRequestTable[0].list}`,
+      comment: `Se movió de la lista ${currentTankerRequestTable[0].list} a la lista ${list} dentro de la pipa ${currentTankerRequestTable[0].waterTanker}`,
       userId: 0,
       waterTankerRequestId: waterTankerRequestTable[0].id,
     });

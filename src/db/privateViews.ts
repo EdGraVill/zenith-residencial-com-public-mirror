@@ -5,9 +5,9 @@ import {
   privateHouseInformationTable,
   privateSchema,
   privateWaterTankerRequestCommentsTable,
-  privateWaterTankerRequestListTable,
   privateWaterTankerRequestStatusEnum,
   privateWaterTankerRequestTable,
+  privateWaterTankerTable,
 } from './privateSchema';
 import { publicUsersTable } from './publicSchema';
 
@@ -33,20 +33,17 @@ export const privateWaterTankerRequestView = privateSchema.view('v_water_tanker_
         '[]'::json
       )`.as('comments'),
       createdAt: privateWaterTankerRequestTable.createdAt,
-      group: privateWaterTankerRequestTable.group,
       house: publicUsersTable.house,
       isTesting: privateWaterTankerRequestTable.isTesting,
-      list: sql<string>`${privateWaterTankerRequestListTable.name}`.as('list'),
-      requestStatus: privateWaterTankerRequestTable.requestStatus,
+      list: privateWaterTankerRequestTable.list,
+      status: privateWaterTankerRequestTable.status,
       street: privateHouseInformationTable.street,
       updatedAt: privateWaterTankerRequestTable.updatedAt,
       uuid: privateWaterTankerRequestTable.uuid,
+      waterTankerName: sql<string>`${privateWaterTankerTable.name}`.as('water_tanker_name'),
     })
     .from(privateWaterTankerRequestTable)
-    .innerJoin(
-      privateWaterTankerRequestListTable,
-      eq(privateWaterTankerRequestTable.waterTankerRequestListId, privateWaterTankerRequestListTable.id),
-    )
+    .innerJoin(privateWaterTankerTable, eq(privateWaterTankerRequestTable.waterTankerId, privateWaterTankerTable.id))
     .innerJoin(publicUsersTable, eq(privateWaterTankerRequestTable.userId, publicUsersTable.id))
     .innerJoin(
       privateHouseInformationTable,
@@ -60,21 +57,21 @@ export const privateWaterTankerRequestView = privateSchema.view('v_water_tanker_
       and(
         eq(privateWaterTankerRequestTable.isActive, true),
         or(
-          eq(privateWaterTankerRequestTable.requestStatus, privateWaterTankerRequestStatusEnum.enumValues[0]),
-          between(privateWaterTankerRequestTable.updatedAt, sql`now() - interval '15 minutes'`, sql`now()`),
+          eq(privateWaterTankerRequestTable.status, privateWaterTankerRequestStatusEnum.enumValues[0]),
+          between(privateWaterTankerRequestTable.updatedAt, sql`now() - interval '6 hours'`, sql`now()`),
         ),
       ),
     )
     .groupBy(
       privateWaterTankerRequestTable.createdAt,
-      privateWaterTankerRequestTable.group,
       publicUsersTable.house,
       privateWaterTankerRequestTable.isTesting,
-      privateWaterTankerRequestListTable.name,
-      privateWaterTankerRequestTable.requestStatus,
+      privateWaterTankerRequestTable.list,
+      privateWaterTankerRequestTable.status,
       privateHouseInformationTable.street,
       privateWaterTankerRequestTable.updatedAt,
       privateWaterTankerRequestTable.uuid,
+      privateWaterTankerTable.name,
     )
     .orderBy(asc(privateWaterTankerRequestTable.createdAt)),
 );

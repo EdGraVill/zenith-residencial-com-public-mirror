@@ -6,7 +6,7 @@ import { type FC, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { createList } from './actions';
+import { createWaterTanker } from './actions';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -30,7 +30,7 @@ interface Props {
   isAdmin: boolean;
 }
 
-const NewListAction: FC<Props> = ({ isAdmin }) => {
+const NewWaterTankerAction: FC<Props> = ({ isAdmin }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -46,7 +46,7 @@ const NewListAction: FC<Props> = ({ isAdmin }) => {
   }, [isOpen]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await createList(values.name, values.description);
+    await createWaterTanker(values.name, values.description);
     setIsOpen(false);
   }
 
@@ -57,12 +57,12 @@ const NewListAction: FC<Props> = ({ isAdmin }) => {
   return (
     <Dialog onOpenChange={setIsOpen} open={isOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">Crear lista</Button>
+        <Button variant="outline">Crear pipa</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Crear lista</DialogTitle>
-          <DialogDescription>Diferente proveedor de Pipa</DialogDescription>
+          <DialogTitle>Crear pipa</DialogTitle>
+          <DialogDescription>Una lista donde se puedan anotar</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -98,7 +98,13 @@ const NewListAction: FC<Props> = ({ isAdmin }) => {
             </div>
             <DialogFooter className="mt-6 flex justify-end">
               <Button disabled={form.formState.isSubmitting} type="submit">
-                Crear {form.formState.isSubmitting && <Loader2 className="animate-spin" />}
+                {form.formState.isSubmitting ? (
+                  <>
+                    Creando <Loader2 className="animate-spin" />
+                  </>
+                ) : (
+                  'Crear'
+                )}
               </Button>
             </DialogFooter>
           </form>
@@ -108,4 +114,4 @@ const NewListAction: FC<Props> = ({ isAdmin }) => {
   );
 };
 
-export default NewListAction;
+export default NewWaterTankerAction;

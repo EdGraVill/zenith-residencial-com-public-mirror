@@ -5,50 +5,81 @@ import type { z } from 'zod';
 
 import Lists from './Lists';
 import MyRequestAction from './MyRequestAction';
-import NewListAction from './NewListAction';
 import NewTestingRequest from './NewTestingRequest';
 import NewUserAction from './NewUserAction';
-import { getLists, getOwnRequest } from './actions';
+import NewWaterTankerAction from './NewWaterTankerAction';
+import { getWaterTankers, myOpenRequestPublic } from './actions';
 import { Badge } from '@/components/ui/badge';
-import type { WaterTankerRequestsListed } from '@/controllers/WaterTankerList';
-import type { privateWaterTankerRequestTable } from '@/db/privateSchema';
+import type { WaterTankers } from '@/controllers/WaterTankerList';
+import type {
+  privateWaterTankerRequestCommentsTable,
+  privateWaterTankerRequestTable,
+  privateWaterTankerTable,
+} from '@/db/privateSchema';
 import type { privateWaterTankerRequestView } from '@/db/privateViews';
-import { listsSchema } from '@/lib/schemas';
+import { waterTankersSchema } from '@/lib/schemas';
 import supabase from '@/utils/supabase/client';
 
 interface Props {
   currentUserId: number;
   isAdmin: boolean;
-  lists: WaterTankerRequestsListed;
-  ownRequest: typeof privateWaterTankerRequestView.$inferSelect | null;
+  openRequest: typeof privateWaterTankerRequestView.$inferSelect | null;
+  waterTankers: WaterTankers;
 }
 
-const Pipas: FC<Props> = ({ currentUserId, isAdmin, lists, ownRequest }) => {
-  const [internalLists, setInternalLists] = useState<z.infer<typeof listsSchema>>(listsSchema.parse(lists));
-  const [internalOwnRequest, setInternalOwnRequest] = useState<
+const Pipas: FC<Props> = ({ currentUserId, isAdmin, waterTankers, openRequest }) => {
+  const [internalWaterTankers, setInternalWaterTankers] = useState<z.infer<typeof waterTankersSchema>>(
+    waterTankersSchema.parse(waterTankers),
+  );
+  const [internalOpenRequest, setInternalOpenRequest] = useState<
     typeof privateWaterTankerRequestView.$inferSelect | null
-  >(ownRequest);
+  >(openRequest);
 
   useEffect(() => {
-    setInternalLists(listsSchema.parse(lists));
-  }, [lists]);
+    setInternalWaterTankers(waterTankersSchema.parse(waterTankers));
+  }, [waterTankers]);
 
   useEffect(() => {
-    setInternalOwnRequest(ownRequest);
-  }, [ownRequest]);
+    setInternalOpenRequest(openRequest);
+  }, [openRequest]);
 
   useEffect(() => {
     const channel = supabase
-      .channel('water_tanker_request_list_insert')
-      .on<typeof privateWaterTankerRequestTable.$inferSelect>(
+      .channel('water_tanker_insert')
+      .on<typeof privateWaterTankerTable.$inferSelect>(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'private',
-          table: 'water_tanker_request_list',
+          table: 'water_tanker',
         },
         () => {
-          getLists().then((newLists) => setInternalLists(listsSchema.parse(newLists)));
+          getWaterTankers().then((newWaterTankers) =>
+            setInternalWaterTankers(waterTankersSchema.parse(newWaterTankers)),
+          );
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('water_tanker_update')
+      .on<typeof privateWaterTankerTable.$inferSelect>(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'private',
+          table: 'water_tanker',
+        },
+        () => {
+          getWaterTankers().then((newWaterTankers) =>
+            setInternalWaterTankers(waterTankersSchema.parse(newWaterTankers)),
+          );
         },
       )
       .subscribe();
@@ -69,8 +100,10 @@ const Pipas: FC<Props> = ({ currentUserId, isAdmin, lists, ownRequest }) => {
           table: 'water_tanker_request',
         },
         () => {
-          getLists().then((newLists) => setInternalLists(listsSchema.parse(newLists)));
-          getOwnRequest().then((newOwnRequest) => setInternalOwnRequest(newOwnRequest));
+          getWaterTankers().then((newWaterTankers) =>
+            setInternalWaterTankers(waterTankersSchema.parse(newWaterTankers)),
+          );
+          myOpenRequestPublic().then((newOpenRequest) => setInternalOpenRequest(newOpenRequest));
         },
       )
       .subscribe();
@@ -91,8 +124,10 @@ const Pipas: FC<Props> = ({ currentUserId, isAdmin, lists, ownRequest }) => {
           table: 'water_tanker_request',
         },
         () => {
-          getLists().then((newLists) => setInternalLists(listsSchema.parse(newLists)));
-          getOwnRequest().then((newOwnRequest) => setInternalOwnRequest(newOwnRequest));
+          getWaterTankers().then((newWaterTankers) =>
+            setInternalWaterTankers(waterTankersSchema.parse(newWaterTankers)),
+          );
+          myOpenRequestPublic().then((newOpenRequest) => setInternalOpenRequest(newOpenRequest));
         },
       )
       .subscribe();
@@ -105,7 +140,7 @@ const Pipas: FC<Props> = ({ currentUserId, isAdmin, lists, ownRequest }) => {
   useEffect(() => {
     const channel = supabase
       .channel('water_tanker_request_comments_insert')
-      .on<typeof privateWaterTankerRequestTable.$inferSelect>(
+      .on<typeof privateWaterTankerRequestCommentsTable.$inferSelect>(
         'postgres_changes',
         {
           event: 'INSERT',
@@ -113,7 +148,9 @@ const Pipas: FC<Props> = ({ currentUserId, isAdmin, lists, ownRequest }) => {
           table: 'water_tanker_request_comments',
         },
         () => {
-          getLists().then((newLists) => setInternalLists(listsSchema.parse(newLists)));
+          getWaterTankers().then((newWaterTankers) =>
+            setInternalWaterTankers(waterTankersSchema.parse(newWaterTankers)),
+          );
         },
       )
       .subscribe();
@@ -126,20 +163,20 @@ const Pipas: FC<Props> = ({ currentUserId, isAdmin, lists, ownRequest }) => {
   return (
     <div className="container py-8">
       <header className="flex flex-col items-center">
-        <h1 className="text-3xl font-bold">Lista de pipas</h1>
+        <h1 className="text-3xl font-bold">Listas de pipas</h1>
         <h2 className="text-2xl">UP {currentUserId}</h2>
         {isAdmin && <Badge className="bg-amber-200 text-amber-950">Admin</Badge>}
       </header>
       <aside className="my-8 flex flex-row gap-4 flex-wrap justify-center">
-        <NewListAction isAdmin={isAdmin} />
+        <NewWaterTankerAction isAdmin={isAdmin} />
         <NewUserAction isAdmin={isAdmin} />
-        <NewTestingRequest isAdmin={isAdmin} lists={internalLists} />
+        <NewTestingRequest isAdmin={isAdmin} waterTankers={internalWaterTankers} />
       </aside>
       <nav className="my-8 flex flex-row flex-wrap gap-6 justify-center">
-        <MyRequestAction lists={internalLists} openRequest={internalOwnRequest} />
+        <MyRequestAction openRequest={internalOpenRequest} waterTankers={internalWaterTankers} />
       </nav>
       <main className="flex flex-row gap-6 flex-wrap justify-evenly">
-        <Lists currentUserId={currentUserId} isAdmin={isAdmin} lists={internalLists} />
+        <Lists currentUserId={currentUserId} isAdmin={isAdmin} waterTankers={internalWaterTankers} />
       </main>
     </div>
   );

@@ -1,47 +1,46 @@
 import type { Dispatch, SetStateAction } from 'react';
 import type { z } from 'zod';
 
-import type { WaterTankerRequestsListed } from '@/controllers/WaterTankerList';
+import type { WaterTankers } from '@/controllers/WaterTankerList';
 import type { privateWaterTankerRequestView } from '@/db/privateViews';
-import type { Group, listsSchema } from '@/lib/schemas';
+import type { List, waterTankersSchema } from '@/lib/schemas';
 
-export function appendRequest(
-  lists: WaterTankerRequestsListed,
-  request: typeof privateWaterTankerRequestView.$inferSelect,
-) {
-  const listName = request.list as keyof WaterTankerRequestsListed;
+export function appendRequest(waterTankers: WaterTankers, request: typeof privateWaterTankerRequestView.$inferSelect) {
+  const waterTankerName = request.waterTankerName;
 
-  if (!lists[listName]) {
-    return lists;
+  if (!waterTankers[waterTankerName]) {
+    return waterTankers;
   }
 
-  const clonedLists = structuredClone(lists);
+  const clonedWaterTankers = structuredClone(waterTankers);
 
-  clonedLists[listName].list.push(request);
+  clonedWaterTankers[waterTankerName].requests.push(request);
 
-  return clonedLists;
+  return clonedWaterTankers;
 }
 
-export function removeRequest(lists: WaterTankerRequestsListed, requestList: string, requestUUID: string) {
-  if (!lists[requestList]) {
-    return lists;
+export function removeRequest(waterTankers: WaterTankers, waterTankerName: string, requestUUID: string) {
+  if (!waterTankers[waterTankerName]) {
+    return waterTankers;
   }
 
-  const clonedLists = structuredClone(lists);
+  const clonedWaterTankers = structuredClone(waterTankers);
 
-  clonedLists[requestList].list = clonedLists[requestList].list.filter((item) => item.uuid !== requestUUID);
+  clonedWaterTankers[waterTankerName].requests = clonedWaterTankers[waterTankerName].requests.filter(
+    (request) => request.uuid !== requestUUID,
+  );
 
-  return clonedLists;
+  return clonedWaterTankers;
 }
 
-export const setListSelectedGroup =
-  (lists: z.infer<typeof listsSchema>) =>
-  (prevState: Record<string, string> = {}) => {
-    const incomingListNames = Object.keys(lists);
+export const setWaterTankerSelectedList =
+  (waterTankers: z.infer<typeof waterTankersSchema>) =>
+  (prevState: Record<string, List | 'all'> = {}) => {
+    const waterTankerNames = Object.keys(waterTankers);
 
-    const notIncludedInPrevState = incomingListNames.filter((listName) => !prevState[listName]);
+    const notIncludedInPrevState = waterTankerNames.filter((waterTankerName) => !prevState[waterTankerName]);
     const notIncludedInIncomingListNames = Object.keys(prevState).filter(
-      (listName) => !incomingListNames.includes(listName),
+      (waterTankerName) => !waterTankerNames.includes(waterTankerName),
     );
 
     if (!notIncludedInPrevState.length && !notIncludedInIncomingListNames.length) {
@@ -50,59 +49,60 @@ export const setListSelectedGroup =
 
     const newState = structuredClone(prevState);
 
-    notIncludedInPrevState.forEach((listName) => {
-      newState[listName] = 'all';
+    notIncludedInPrevState.forEach((waterTankerName) => {
+      newState[waterTankerName] = 'all';
     });
 
-    notIncludedInIncomingListNames.forEach((listName) => {
-      delete newState[listName];
+    notIncludedInIncomingListNames.forEach((waterTankerName) => {
+      delete newState[waterTankerName];
     });
 
     return newState;
   };
 
-export const updateListSelectedGroup =
-  (listName: string, setGroup: Dispatch<SetStateAction<Record<string, string>>>) => (selectedGroup: string) =>
-    setGroup((prevState) => {
-      if (prevState[listName] === selectedGroup) {
+export const updateWaterTankerSelectedList =
+  (waterTankerName: string, setSelectedList: Dispatch<SetStateAction<Record<string, List | 'all'>>>) =>
+  (selectedList: List | 'all') =>
+    setSelectedList((prevState) => {
+      if (prevState[waterTankerName] === selectedList) {
         return prevState;
       }
 
       const newState = structuredClone(prevState);
 
-      newState[listName] = selectedGroup || 'all';
+      newState[waterTankerName] = selectedList || 'all';
 
       return newState;
     });
 
-export const getBestGroup = (lists: z.infer<typeof listsSchema>, listName: string) => {
-  if (!listName) {
-    return 'A';
+export const getBestList = (waterTankers: z.infer<typeof waterTankersSchema>, waterTankerName: string) => {
+  if (!waterTankerName) {
+    return '1';
   }
 
-  const list = lists[listName];
+  const list = waterTankers[waterTankerName];
 
-  const groupsCount: Record<Group, number> = list.list.reduce(
+  const listCount: Record<List, number> = list.requests.reduce(
     (acc, curr) => ({
       ...acc,
-      [curr.group]: (acc[curr.group] || 0) + 1,
+      [curr.list]: (acc[curr.list] || 0) + 1,
     }),
     {
-      A: 0,
-      B: 0,
-      C: 0,
-      D: 0,
-      E: 0,
-      F: 0,
-      G: 0,
+      '1': 0,
+      '2': 0,
+      '3': 0,
+      '4': 0,
+      '5': 0,
+      '6': 0,
+      '7': 0,
     },
   );
 
-  for (const group in groupsCount) {
-    if (groupsCount[group as keyof typeof groupsCount] < 6) {
-      return group as Group;
+  for (const list in listCount) {
+    if (listCount[list as keyof typeof listCount] < 6) {
+      return list as List;
     }
   }
 
-  return 'G';
+  return '7';
 };

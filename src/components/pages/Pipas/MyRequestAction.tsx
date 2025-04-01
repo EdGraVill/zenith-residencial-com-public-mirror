@@ -7,35 +7,35 @@ import type { FC } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { cancelRequest, request } from './actions';
-import { getBestGroup } from './utils';
+import { cancelRequest, createRequest } from './actions';
+import { getBestList } from './utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { privateWaterTankerRequestView } from '@/db/privateViews';
-import type { Group, listsSchema } from '@/lib/schemas';
+import type { List, waterTankersSchema } from '@/lib/schemas';
 
 const formSchema = z.object({
-  group: z.enum(['A', 'B', 'C', 'D', 'E', 'F', 'G'], {
-    invalid_type_error: 'Grupo requerido',
-    required_error: 'Grupo requerido',
+  list: z.enum(['1', '2', '3', '4', '5', '6', '7'], {
+    invalid_type_error: 'Lista requerida',
+    required_error: 'Lista requerida',
   }),
-  list: z.string({ required_error: 'Lista requerida' }),
+  waterTankerName: z.string({ required_error: 'Pipa requerida' }),
 });
 
 interface Props {
-  lists: z.infer<typeof listsSchema>;
   openRequest: typeof privateWaterTankerRequestView.$inferSelect | null;
+  waterTankers: z.infer<typeof waterTankersSchema>;
 }
 
-const MyRequestAction: FC<Props> = ({ lists, openRequest }) => {
+const MyRequestAction: FC<Props> = ({ openRequest, waterTankers }) => {
   const [isRemoving, setRemovingState] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     defaultValues: {
-      group: openRequest?.group as Group,
-      list: openRequest?.list,
+      list: openRequest?.list as List,
+      waterTankerName: openRequest?.waterTankerName,
     },
     disabled: !!openRequest,
     resolver: zodResolver(formSchema),
@@ -43,36 +43,36 @@ const MyRequestAction: FC<Props> = ({ lists, openRequest }) => {
 
   useEffect(() => {
     if (!openRequest) {
-      form.reset({ group: '' as Group, list: '' });
+      form.reset({ list: '' as List, waterTankerName: '' });
     }
   }, [openRequest]);
 
   useEffect(() => {
     setRemovingState(false);
-  }, [lists]);
+  }, [waterTankers]);
 
   useEffect(() => {
-    const listName = form.watch('list');
+    const waterTankerName = form.watch('waterTankerName');
 
-    if (listName) {
-      form.setValue('group', getBestGroup(lists, listName));
+    if (waterTankerName) {
+      form.setValue('list', getBestList(waterTankers, waterTankerName));
     }
-  }, [form.watch('list')]);
+  }, [form.watch('waterTankerName')]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await request(lists[values.list].id, values.group);
+    await createRequest(waterTankers[values.waterTankerName].id, values.list);
   }
 
   function onRemove() {
     if (openRequest) {
       setRemovingState(true);
-      cancelRequest(openRequest.uuid).finally(() => form.reset({ group: '' as Group, list: '' }));
+      cancelRequest(openRequest.uuid).finally(() => form.reset({ list: '' as List, waterTankerName: '' }));
     }
   }
 
-  function onGoToList() {
+  function onGoToWaterTanker() {
     if (openRequest) {
-      const listElement = document.querySelector(`[data-list-name="${openRequest.list}"]`);
+      const listElement = document.querySelector(`[data-water-tanker-name="${openRequest.waterTankerName}"]`);
 
       if (listElement) {
         window.scrollTo({
@@ -90,24 +90,24 @@ const MyRequestAction: FC<Props> = ({ lists, openRequest }) => {
           <CardContent className="grid grid-cols-2">
             <div className="flex flex-col">
               <CardTitle className="flex text-nowrap">{openRequest ? 'Casa anotada' : 'Anotar mi casa'}</CardTitle>
-              <CardDescription className="flex">en la lista:</CardDescription>
+              <CardDescription className="flex">en la pipa:</CardDescription>
             </div>
             <div className="flex flex-col items-end">
               <FormField
                 control={form.control}
-                name="list"
+                name="waterTankerName"
                 render={({ field }) => (
                   <FormItem>
                     <Select disabled={!!openRequest} onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecciona una lista" />
+                          <SelectValue placeholder="Selecciona una pipa" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {Object.keys(lists).map((listName) => (
-                          <SelectItem key={listName} value={listName}>
-                            {listName}
+                        {Object.keys(waterTankers).map((waterTankerName) => (
+                          <SelectItem key={waterTankerName} value={waterTankerName}>
+                            {waterTankerName}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -117,22 +117,22 @@ const MyRequestAction: FC<Props> = ({ lists, openRequest }) => {
                 )}
               />
               <div className="flex flex-row items-center gap-x-3">
-                <span className="text-xs">en el grupo</span>
+                <span className="text-xs">en la lista</span>
                 <FormField
                   control={form.control}
-                  name="group"
+                  name="list"
                   render={({ field }) => (
                     <FormItem>
-                      <Select disabled={!!openRequest} onValueChange={field.onChange} value={form.watch('group')}>
+                      <Select disabled={!!openRequest} onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Grupo" />
+                            <SelectValue placeholder="Lista" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((letter) => (
-                            <SelectItem key={letter} value={letter}>
-                              {letter}
+                          {['1', '2', '3', '4', '5', '6', '7'].map((list) => (
+                            <SelectItem key={list} value={list}>
+                              {list}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -164,8 +164,8 @@ const MyRequestAction: FC<Props> = ({ lists, openRequest }) => {
       {openRequest && (
         <CardFooter className="flex justify-center gap-x-4">
           <CardAction>
-            <Button disabled={isRemoving} onClick={onGoToList} variant="outline">
-              Ver lista
+            <Button disabled={isRemoving} onClick={onGoToWaterTanker} variant="outline">
+              Ver pipa
             </Button>
           </CardAction>
           <CardAction>

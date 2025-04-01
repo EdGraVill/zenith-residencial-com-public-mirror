@@ -20,26 +20,26 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { Group, listsSchema } from '@/lib/schemas';
+import type { List, waterTankersSchema } from '@/lib/schemas';
 
 const formSchema = z.object({
-  group: z.enum(['A', 'B', 'C', 'D', 'E', 'F', 'G'], {
-    invalid_type_error: 'Grupo requerido',
-    required_error: 'Grupo requerido',
-  }),
   house: z.preprocess(
     (val) => parseInt(val as string, 10) || 0,
     z.number().min(1, 'La casa es requerida').max(171, 'La casa no puede ser mayor a 171'),
   ),
-  listId: z.number({ required_error: 'La lista es requerida' }),
+  list: z.enum(['1', '2', '3', '4', '5', '6', '7'], {
+    invalid_type_error: 'Lista requerida',
+    required_error: 'Lista requerida',
+  }),
+  waterTankerId: z.number({ required_error: 'La pipa es requerida' }),
 });
 
 interface Props {
   isAdmin: boolean;
-  lists: z.infer<typeof listsSchema>;
+  waterTankers: z.infer<typeof waterTankersSchema>;
 }
 
-const NewTestingRequest: FC<Props> = ({ isAdmin, lists }) => {
+const NewTestingRequest: FC<Props> = ({ isAdmin, waterTankers }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -47,15 +47,15 @@ const NewTestingRequest: FC<Props> = ({ isAdmin, lists }) => {
   });
 
   useEffect(() => {
-    form.reset({ group: '' as Group, house: '' as unknown as number, listId: '' as unknown as number });
+    form.reset({ house: '' as unknown as number, list: '' as List, waterTankerId: '' as unknown as number });
   }, [isOpen]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await addTestingRequest(values.house, values.listId, values.group);
+      await addTestingRequest(values.house, values.waterTankerId, values.list);
       setIsOpen(false);
     } catch (error) {
-      form.setError('house', { message: 'La casa ya está en una lista' });
+      form.setError('house', { message: 'La casa ya está en una pipa' });
     }
   }
 
@@ -91,20 +91,20 @@ const NewTestingRequest: FC<Props> = ({ isAdmin, lists }) => {
               />
               <FormField
                 control={form.control}
-                name="listId"
+                name="waterTankerId"
                 render={({ field }) => (
                   <FormItem className="flex-1">
-                    <FormLabel>Lista</FormLabel>
+                    <FormLabel>Pipa</FormLabel>
                     <Select onValueChange={(value) => field.onChange(parseInt(value, 10))} value={`${field.value}`}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecciona una lista" />
+                          <SelectValue placeholder="Selecciona una pipa" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {Object.keys(lists).map((listName) => (
-                          <SelectItem key={listName} value={`${lists[listName].id}`}>
-                            {listName}
+                        {Object.keys(waterTankers).map((waterTankerName) => (
+                          <SelectItem key={waterTankerName} value={`${waterTankers[waterTankerName].id}`}>
+                            {waterTankerName}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -115,20 +115,20 @@ const NewTestingRequest: FC<Props> = ({ isAdmin, lists }) => {
               />
               <FormField
                 control={form.control}
-                name="group"
+                name="list"
                 render={({ field }) => (
                   <FormItem className="flex-1">
-                    <FormLabel>Grupo</FormLabel>
+                    <FormLabel>Lista</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Grupo" />
+                          <SelectValue placeholder="Lista" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((letter) => (
-                          <SelectItem key={letter} value={letter}>
-                            {letter}
+                        {['1', '2', '3', '4', '5', '6', '7'].map((list) => (
+                          <SelectItem key={list} value={list}>
+                            {list}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -141,7 +141,13 @@ const NewTestingRequest: FC<Props> = ({ isAdmin, lists }) => {
             <FormMessage />
             <DialogFooter className="mt-6 flex justify-end">
               <Button disabled={form.formState.isSubmitting} type="submit">
-                Anotar {form.formState.isSubmitting && <Loader2 className="animate-spin" />}
+                {form.formState.isSubmitting ? (
+                  <>
+                    Anotando <Loader2 className="animate-spin" />
+                  </>
+                ) : (
+                  'Anotar'
+                )}
               </Button>
             </DialogFooter>
           </form>

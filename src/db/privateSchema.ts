@@ -15,13 +15,7 @@ export const privateContactInformationTable = privateSchema.table('contact_infor
     .references(() => publicUsersTable.id),
 });
 
-export const privateWaterTankerRequestStatusEnum = privateSchema.enum('water_tanker_request_status', [
-  'pending',
-  'completed',
-  'cancelled',
-]);
-
-export const privateWaterTankerRequestListTable = privateSchema.table('water_tanker_request_list', {
+export const privateWaterTankerTable = privateSchema.table('water_tanker', {
   ...pk,
   ...timestamps,
   description: t.text('description').notNull(),
@@ -29,33 +23,39 @@ export const privateWaterTankerRequestListTable = privateSchema.table('water_tan
   name: t.text('name').notNull().unique(),
 });
 
-export const privateWaterTankerRequestListGroupEnum = privateSchema.enum('water_tanker_request_list_group', [
-  'A',
-  'B',
-  'C',
-  'D',
-  'E',
-  'F',
-  'G',
+export const privateWaterTankerRequestListEnum = privateSchema.enum('water_tanker_request_list', [
+  '1',
+  '2',
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+]);
+
+export const privateWaterTankerRequestStatusEnum = privateSchema.enum('water_tanker_request_status', [
+  'pending',
+  'completed',
+  'cancelled',
 ]);
 
 export const privateWaterTankerRequestTable = privateSchema.table('water_tanker_request', {
   ...pk,
   ...timestamps,
-  group: privateWaterTankerRequestListGroupEnum('group').notNull(),
   isActive: t.boolean('is_active').notNull().default(true),
   isTesting: t.boolean('is_testing').notNull().default(false),
-  requestStatus: privateWaterTankerRequestStatusEnum('request_status').notNull().default('pending'),
+  list: privateWaterTankerRequestListEnum('list').notNull(),
+  status: privateWaterTankerRequestStatusEnum('status').notNull().default('pending'),
   testerUserId: t.integer('tester_user_id').references(() => publicUsersTable.id),
   userId: t
     .integer('user_id')
     .notNull()
     .references(() => publicUsersTable.id),
   uuid: t.uuid('uuid').defaultRandom().unique().notNull(),
-  waterTankerRequestListId: t
-    .integer('water_tanker_request_list_id')
+  waterTankerId: t
+    .integer('water_tanker_id')
     .notNull()
-    .references(() => privateWaterTankerRequestListTable.id),
+    .references(() => privateWaterTankerTable.id),
 });
 
 export const privateWaterTankerRequestCommentsTable = privateSchema.table('water_tanker_request_comments', {
