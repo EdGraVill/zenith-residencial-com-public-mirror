@@ -13,7 +13,7 @@ interface ListsProps {
   waterTankers: z.infer<typeof waterTankersSchema>;
 }
 
-const Lists: FC<ListsProps> = ({ currentUserId, isAdmin, waterTankers }) => {
+const WaterTanker: FC<ListsProps> = ({ currentUserId, isAdmin, waterTankers }) => {
   const [selectedList, setSelectedList] = useState<Record<string, List | 'all'>>(
     setWaterTankerSelectedList(waterTankers)(),
   );
@@ -103,4 +103,4 @@ const Lists: FC<ListsProps> = ({ currentUserId, isAdmin, waterTankers }) => {
   );
 };
 
-export default Lists;
+export default WaterTanker;

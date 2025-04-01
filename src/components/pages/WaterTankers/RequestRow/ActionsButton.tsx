@@ -46,7 +46,7 @@ interface Props {
   waterTankers: z.infer<typeof waterTankersSchema>;
 }
 
-const Actions: FC<Props> = ({ currentUserId, isAdmin, waterTankers, request }) => {
+const ActionsButton: FC<Props> = ({ currentUserId, isAdmin, waterTankers, request }) => {
   const [isLoading, setLoadingState] = useState(false);
   const [isCommentsOpen, setCommentsOpenStatus] = useState(false);
   const waterTankerNames = Object.keys(waterTankers);
@@ -187,4 +187,4 @@ const Actions: FC<Props> = ({ currentUserId, isAdmin, waterTankers, request }) =
   );
 };
 
-export default Actions;
+export default ActionsButton;

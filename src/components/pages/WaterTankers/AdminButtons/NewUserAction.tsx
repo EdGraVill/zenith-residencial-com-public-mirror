@@ -6,7 +6,7 @@ import { type FC, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { createWaterTanker } from './actions';
+import { registerUser } from '../actions';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -19,34 +19,35 @@ import {
 } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 
 const formSchema = z.object({
-  description: z.string().nonempty('La descripción es requerida'),
-  name: z.string().nonempty('El nombre es requerido'),
+  house: z.preprocess(
+    (val) => parseInt(val as string, 10) || 0,
+    z.number().min(1, 'La casa es requerida').max(171, 'La casa no puede ser mayor a 171'),
+  ),
+  phone: z
+    .string()
+    .min(10, 'El número de teléfono debe tener al menos 10 dígitos')
+    .max(10, 'El número de teléfono no puede tener más de 10 dígitos'),
 });
 
 interface Props {
   isAdmin: boolean;
 }
 
-const NewWaterTankerAction: FC<Props> = ({ isAdmin }) => {
+const NewUserAction: FC<Props> = ({ isAdmin }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
-    defaultValues: {
-      description: '',
-      name: '',
-    },
     resolver: zodResolver(formSchema),
   });
 
   useEffect(() => {
-    form.reset({ description: '', name: '' });
+    form.reset({ house: '' as unknown as number, phone: '' });
   }, [isOpen]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await createWaterTanker(values.name, values.description);
+    await registerUser(values.phone, values.house);
     setIsOpen(false);
   }
 
@@ -57,23 +58,22 @@ const NewWaterTankerAction: FC<Props> = ({ isAdmin }) => {
   return (
     <Dialog onOpenChange={setIsOpen} open={isOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">Crear pipa</Button>
+        <Button variant="outline">Agregar usuario</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Crear pipa</DialogTitle>
-          <DialogDescription>Una lista donde se puedan anotar</DialogDescription>
+          <DialogTitle>Agregar usuario</DialogTitle>
+          <DialogDescription>Asociar teléfono con casa</DialogDescription>
         </DialogHeader>
-
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-row gap-4">
               <FormField
                 control={form.control}
-                name="name"
+                name="house"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nombre</FormLabel>
+                  <FormItem className="max-w-[80px]">
+                    <FormLabel>UP</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -83,28 +83,22 @@ const NewWaterTankerAction: FC<Props> = ({ isAdmin }) => {
               />
               <FormField
                 control={form.control}
-                name="description"
+                name="phone"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descripción</FormLabel>
+                  <FormItem className="flex-1">
+                    <FormLabel>Teléfono</FormLabel>
                     <FormControl>
-                      <Textarea {...field} />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormMessage />
             </div>
+            <FormMessage />
             <DialogFooter className="mt-6 flex justify-end">
               <Button disabled={form.formState.isSubmitting} type="submit">
-                {form.formState.isSubmitting ? (
-                  <>
-                    Creando <Loader2 className="animate-spin" />
-                  </>
-                ) : (
-                  'Crear'
-                )}
+                Registrar {form.formState.isSubmitting && <Loader2 className="animate-spin" />}
               </Button>
             </DialogFooter>
           </form>
@@ -114,4 +108,4 @@ const NewWaterTankerAction: FC<Props> = ({ isAdmin }) => {
   );
 };
 
-export default NewWaterTankerAction;
+export default NewUserAction;

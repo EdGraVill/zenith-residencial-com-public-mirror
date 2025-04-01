@@ -1,1 +1,1 @@
-export { default } from '@/components/pages/Pipas';
+export { default } from '@/components/pages/WaterTankers';
