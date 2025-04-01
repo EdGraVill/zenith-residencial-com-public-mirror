@@ -1,0 +1,1 @@
+ALTER TABLE "private"."water_tanker_request_list" ADD COLUMN "is_active" boolean DEFAULT true NOT NULL;
