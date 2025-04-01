@@ -1,8 +1,8 @@
 'use server';
 
 import User from '@/controllers/User';
-import WaterTankerList from '@/controllers/WaterTankerList';
-import type { Group } from '@/lib/schemas';
+import WaterTanker from '@/controllers/WaterTankerList';
+import type { List } from '@/lib/schemas';
 
 export async function auth(phone: string) {
   try {
@@ -18,7 +18,7 @@ export async function auth(phone: string) {
   }
 }
 
-export async function request(listId: number, group: string) {
+export async function createRequest(waterTankerId: number, list: List) {
   const user = await User.getUserByCookies();
 
   if (!user) {
@@ -26,10 +26,10 @@ export async function request(listId: number, group: string) {
   }
 
   try {
-    const waterTankerList = new WaterTankerList(user);
+    const waterTanker = new WaterTanker(user);
 
-    await waterTankerList.requestWaterTanker(listId, group as Group);
-    const request = await waterTankerList.myOpenRequestPublic();
+    await waterTanker.createRequest(waterTankerId, list);
+    const request = await waterTanker.myOpenRequestPublic();
 
     return request;
   } catch (error) {
@@ -45,12 +45,12 @@ export async function completeRequest(requestUUID: string) {
   }
 
   try {
-    const waterTankerList = new WaterTankerList(user);
+    const waterTanker = new WaterTanker(user);
 
     if (await user.canBypass()) {
-      await waterTankerList.completeRequest(requestUUID);
+      await waterTanker.completeRequest(requestUUID);
     } else {
-      await waterTankerList.completeRequest();
+      await waterTanker.completeRequest();
     }
   } catch (error) {
     return null;
@@ -65,19 +65,19 @@ export async function cancelRequest(requestUUID: string) {
   }
 
   try {
-    const waterTankerList = new WaterTankerList(user);
+    const waterTanker = new WaterTanker(user);
 
     if (await user.canBypass()) {
-      await waterTankerList.cancelRequest(false, requestUUID);
+      await waterTanker.cancelRequest(false, requestUUID);
     } else {
-      await waterTankerList.cancelRequest();
+      await waterTanker.cancelRequest();
     }
   } catch (error) {
     return null;
   }
 }
 
-export async function moveRequest(listId: number, requestUUID?: string) {
+export async function moveRequestToWaterTanker(waterTankerId: number, requestUUID?: string) {
   const user = await User.getUserByCookies();
 
   if (!user) {
@@ -85,30 +85,27 @@ export async function moveRequest(listId: number, requestUUID?: string) {
   }
 
   try {
-    const waterTankerList = new WaterTankerList(user);
+    const waterTanker = new WaterTanker(user);
 
-    console.log('Moving request', listId, requestUUID);
-
-    await waterTankerList.moveRequestToList(listId, requestUUID);
+    await waterTanker.moveRequestToWaterTanker(waterTankerId, requestUUID);
   } catch (error) {
-    console.error('Error moving request', error);
     return null;
   }
 }
 
-export async function getLists() {
+export async function getWaterTankers() {
   const user = await User.getUserByCookies();
 
   if (!user) {
     return {};
   }
 
-  const lists = await WaterTankerList.getLists();
+  const waterTankers = await WaterTanker.getWaterTankers();
 
-  return lists;
+  return waterTankers;
 }
 
-export async function createList(name: string, description: string) {
+export async function createWaterTanker(name: string, description: string) {
   const user = await User.getUserByCookies();
 
   if (!user) {
@@ -116,9 +113,9 @@ export async function createList(name: string, description: string) {
   }
 
   try {
-    const waterTankerList = new WaterTankerList(user);
+    const waterTanker = new WaterTanker(user);
 
-    await waterTankerList.createList(name, description);
+    await waterTanker.createWaterTanker(name, description);
   } catch (error) {
     return null;
   }
@@ -138,7 +135,7 @@ export async function registerUser(phone: string, house: number) {
   }
 }
 
-export async function getOwnRequest() {
+export async function myOpenRequestPublic() {
   const user = await User.getUserByCookies();
 
   if (!user) {
@@ -146,11 +143,11 @@ export async function getOwnRequest() {
   }
 
   try {
-    const waterTankerList = new WaterTankerList(user);
+    const waterTanker = new WaterTanker(user);
 
-    const request = await waterTankerList.myOpenRequestPublic();
+    const openRequest = await waterTanker.myOpenRequestPublic();
 
-    return request;
+    return openRequest;
   } catch (error) {
     return null;
   }
@@ -164,31 +161,34 @@ export async function addComment(comment: string, requestUUID: string) {
   }
 
   try {
-    const waterTankerList = new WaterTankerList(user);
+    const waterTanker = new WaterTanker(user);
 
-    await waterTankerList.addComment(comment, requestUUID);
+    await waterTanker.addComment(comment, requestUUID);
   } catch (error) {
     return null;
   }
 }
 
-export async function addTestingRequest(house: number, listId: number, group: string) {
+export async function addTestingRequest(house: number, waterTankerId: number, list: List) {
   const user = await User.getUserByCookies();
 
   if (!user) {
     return null;
   }
 
-  const waterTankerList = new WaterTankerList(user);
+  const waterTankerList = new WaterTanker(user);
 
-  await waterTankerList.addTestingRequest(house, listId, group as Group);
+  if (!(await waterTankerList.isAdmin())) {
+    return null;
+  }
+
+  await waterTankerList.addTestingRequest(house, waterTankerId, list);
 }
 
-export async function moveRequestToGroup(group: string, requestUUID: string) {
-  const supportedGroups = ['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const;
+export async function moveRequestToList(list: List, requestUUID: string) {
+  const supportedLists = ['1', '2', '3', '4', '5', '6', '7'] as const;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (!supportedGroups.includes(group as any)) {
+  if (!supportedLists.includes(list)) {
     return null;
   }
 
@@ -199,12 +199,12 @@ export async function moveRequestToGroup(group: string, requestUUID: string) {
   }
 
   try {
-    const waterTankerList = new WaterTankerList(user);
+    const waterTanker = new WaterTanker(user);
 
-    if (await waterTankerList.isAdmin()) {
-      await waterTankerList.moveRequestToGroup(group as (typeof supportedGroups)[number], requestUUID);
+    if (await waterTanker.isAdmin()) {
+      await waterTanker.moveRequestToList(list, requestUUID);
     } else {
-      await waterTankerList.moveRequestToGroup(group as (typeof supportedGroups)[number]);
+      await waterTanker.moveRequestToList(list);
     }
   } catch (error) {
     return null;

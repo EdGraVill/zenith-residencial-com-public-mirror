@@ -2,42 +2,46 @@ import { type FC, useEffect, useState } from 'react';
 import type { z } from 'zod';
 
 import RequestRow from './RequestRow';
-import { setListSelectedGroup, updateListSelectedGroup } from './utils';
+import { setWaterTankerSelectedList, updateWaterTankerSelectedList } from './utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import type { listsSchema } from '@/lib/schemas';
+import type { List, waterTankersSchema } from '@/lib/schemas';
 
 interface ListsProps {
   currentUserId: number;
   isAdmin: boolean;
-  lists: z.infer<typeof listsSchema>;
+  waterTankers: z.infer<typeof waterTankersSchema>;
 }
 
-const Lists: FC<ListsProps> = ({ currentUserId, isAdmin, lists }) => {
-  const [selectedGroup, setSelectedGroup] = useState<Record<string, string>>(setListSelectedGroup(lists)());
+const Lists: FC<ListsProps> = ({ currentUserId, isAdmin, waterTankers }) => {
+  const [selectedList, setSelectedList] = useState<Record<string, List | 'all'>>(
+    setWaterTankerSelectedList(waterTankers)(),
+  );
 
   useEffect(() => {
-    setSelectedGroup(setListSelectedGroup(lists)());
-  }, [lists]);
+    setSelectedList(setWaterTankerSelectedList(waterTankers));
+  }, [waterTankers]);
 
   return (
     <>
-      {Object.keys(lists).map((listName) => {
-        const list = lists[listName];
-        const currentGroup = selectedGroup[listName];
+      {Object.keys(waterTankers).map((waterTankerName) => {
+        const waterTanker = waterTankers[waterTankerName];
+        const currentList = selectedList[waterTankerName];
 
-        const filteredList = list.list.filter(({ group }) => currentGroup === 'all' || currentGroup === group);
+        const filteredRequests = waterTanker.requests.filter(
+          ({ list }) => currentList === 'all' || currentList === list,
+        );
 
         return (
-          <div className="max-w-md" data-list-name={listName} key={list.id}>
+          <div className="max-w-md" data-water-tanker-name={waterTankerName} key={waterTanker.id}>
             <header className="flex flex-col items-center">
-              <h3 className="text-xl">{list.name}</h3>
-              <p className="text-sm p-2 text-balance bg-zinc-100 w-full">{list.description}</p>
+              <h3 className="text-xl">{waterTanker.name}</h3>
+              <p className="text-sm p-2 text-balance bg-zinc-100 w-full">{waterTanker.description}</p>
               <ToggleGroup
                 className="w-full"
-                onValueChange={updateListSelectedGroup(listName, setSelectedGroup)}
+                onValueChange={updateWaterTankerSelectedList(waterTankerName, setSelectedList)}
                 type="single"
-                value={currentGroup}
+                value={currentList}
               >
                 <ToggleGroupItem
                   aria-label="Todos"
@@ -45,17 +49,19 @@ const Lists: FC<ListsProps> = ({ currentUserId, isAdmin, lists }) => {
                   value="all"
                 >
                   <span className="text-sm/3">Todos</span>
-                  <span className="text-[9px]">{list.list.length}</span>
+                  <span className="text-[9px]">{waterTanker.requests.length}</span>
                 </ToggleGroupItem>
-                {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((letter) => (
+                {['1', '2', '3', '4', '5', '6', '7'].map((list) => (
                   <ToggleGroupItem
-                    aria-label={letter}
+                    aria-label={list}
                     className="data-[state=on]:bg-black data-[state=on]:text-white last:rounded-none flex flex-col items-center gap-0"
-                    key={letter}
-                    value={letter}
+                    key={list}
+                    value={list}
                   >
-                    <span className="text-sm/3">{letter}</span>
-                    <span className="text-[9px]">{list.list.filter(({ group }) => group === letter).length}</span>
+                    <span className="text-sm/3">{list}</span>
+                    <span className="text-[9px]">
+                      {waterTanker.requests.filter((request) => request.list === list).length}
+                    </span>
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
@@ -69,23 +75,23 @@ const Lists: FC<ListsProps> = ({ currentUserId, isAdmin, lists }) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {!filteredList.length && (
+                {!filteredRequests.length && (
                   <TableRow>
                     <TableCell className="text-center w-[404px]" colSpan={3}>
                       <span className="text-sm font-light text-balance">
-                        Sin solicitudes para mostrar{currentGroup !== 'all' && ` en la lista ${currentGroup}`}
+                        Sin solicitudes para mostrar{currentList !== 'all' && ` en la lista ${currentList}`}
                       </span>
                     </TableCell>
                   </TableRow>
                 )}
-                {filteredList.map((request) => (
+                {filteredRequests.map((request) => (
                   <RequestRow
                     currentUserId={currentUserId}
                     isAdmin={isAdmin}
-                    isFiltered={currentGroup !== 'all'}
+                    isFiltered={currentList !== 'all'}
                     key={request.uuid}
-                    lists={lists}
                     request={request}
+                    waterTankers={waterTankers}
                   />
                 ))}
               </TableBody>

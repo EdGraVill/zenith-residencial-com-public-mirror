@@ -3,7 +3,7 @@ import { Fragment, useState } from 'react';
 import type { FC, ReactNode } from 'react';
 import type { z } from 'zod';
 
-import { cancelRequest, completeRequest, moveRequest, moveRequestToGroup } from '../actions';
+import { cancelRequest, completeRequest, moveRequestToList, moveRequestToWaterTanker } from '../actions';
 import Comments from './Comments';
 import RelativeTimeToNow from '@/components/common/RelativeTimeToNow';
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { listsSchema, requestSchema } from '@/lib/schemas';
+import type { List, requestSchema, waterTankersSchema } from '@/lib/schemas';
 
 interface Action {
   action: () => void;
@@ -34,7 +34,6 @@ interface GroupedActions {
   actions: Action[];
   bottomSeparator?: boolean;
   label: string;
-
   topSeparator?: boolean;
 }
 
@@ -43,17 +42,17 @@ type Actions = Array<Action | GroupedActions>;
 interface Props {
   currentUserId: number;
   isAdmin: boolean;
-  lists: z.infer<typeof listsSchema>;
   request: z.infer<typeof requestSchema>;
+  waterTankers: z.infer<typeof waterTankersSchema>;
 }
 
-const Actions: FC<Props> = ({ currentUserId, isAdmin, lists, request }) => {
+const Actions: FC<Props> = ({ currentUserId, isAdmin, waterTankers, request }) => {
   const [isLoading, setLoadingState] = useState(false);
   const [isCommentsOpen, setCommentsOpenStatus] = useState(false);
-  const listNames = Object.keys(lists);
+  const waterTankerNames = Object.keys(waterTankers);
   const actions: Actions = [];
 
-  if (request.requestStatus === 'pending' && (isAdmin || request.house === currentUserId)) {
+  if (request.status === 'pending' && (isAdmin || request.house === currentUserId)) {
     actions.push({
       action: async () => {
         setLoadingState(true);
@@ -64,7 +63,7 @@ const Actions: FC<Props> = ({ currentUserId, isAdmin, lists, request }) => {
     });
   }
 
-  if (request.requestStatus === 'pending' && (isAdmin || request.house === currentUserId)) {
+  if (request.status === 'pending' && (isAdmin || request.house === currentUserId)) {
     actions.push({
       action: async () => {
         setLoadingState(true);
@@ -86,37 +85,37 @@ const Actions: FC<Props> = ({ currentUserId, isAdmin, lists, request }) => {
     topSeparator: true,
   });
 
-  if (request.isTesting || (request.requestStatus === 'pending' && request.house === currentUserId)) {
+  if (request.isTesting || (request.status === 'pending' && request.house === currentUserId)) {
     actions.push({
-      actions: listNames
-        .filter((listName) => request.list !== listName)
-        .map((name) => ({
+      actions: waterTankerNames
+        .filter((waterTankerName) => request.waterTankerName !== waterTankerName)
+        .map((waterTankerName) => ({
           action: async () => {
             setLoadingState(true);
-            await moveRequest(lists[name].id, isAdmin ? request.uuid : undefined);
+            await moveRequestToWaterTanker(waterTankers[waterTankerName].id, isAdmin ? request.uuid : undefined);
             setLoadingState(false);
           },
-          label: name,
+          label: waterTankerName,
         })),
-      label: 'Mover a la lista',
+      label: 'Mover a la pipa',
       topSeparator: true,
     } as GroupedActions);
   }
 
-  if (request.requestStatus === 'pending' && (isAdmin || request.house === currentUserId)) {
+  if (request.status === 'pending' && (isAdmin || request.house === currentUserId)) {
     actions.push({
-      actions: ['A', 'B', 'C', 'D', 'E', 'F', 'G']
-        .filter((group) => group !== request.group)
-        .map((letter) => ({
+      actions: ['1', '2', '3', '4', '5', '6', '7']
+        .filter((list) => list !== request.list)
+        .map((list) => ({
           action: async () => {
             setLoadingState(true);
-            await moveRequestToGroup(letter, request.uuid);
+            await moveRequestToList(list as List, request.uuid);
             setLoadingState(false);
           },
-          label: letter,
-          shortcut: `(${lists[request.list].list.filter(({ group }) => group === letter).length})`,
+          label: list,
+          shortcut: `${waterTankers[request.waterTankerName].requests.filter((request) => request.list === list).length}`,
         })),
-      label: 'Mover al grupo',
+      label: 'Mover a la lista',
       topSeparator: true,
     } as GroupedActions);
   }
@@ -127,17 +126,17 @@ const Actions: FC<Props> = ({ currentUserId, isAdmin, lists, request }) => {
         <Button
           className="w-[90px]"
           disabled={isLoading}
-          size={request.requestStatus === 'pending' ? 'default' : 'xs'}
+          size={request.status === 'pending' ? 'default' : 'xs'}
           variant="outline"
         >
           {isLoading ? <Loader2 className="animate-spin" /> : 'Acciones'}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56">
-        {request.requestStatus !== 'pending' && (
+        {request.status !== 'pending' && (
           <>
             <DropdownMenuLabel className="text-[10px]">
-              {request.requestStatus === 'cancelled' ? 'Cancelado' : 'Completado'} hace{' '}
+              {request.status === 'cancelled' ? 'Cancelado' : 'Completado'} hace{' '}
               {<RelativeTimeToNow date={request.updatedAt} />}
             </DropdownMenuLabel>
           </>

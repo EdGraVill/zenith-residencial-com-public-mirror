@@ -6,15 +6,15 @@ import BadgeStatus from './BadgeStatus';
 import RelativeTimeToNow from '@/components/common/RelativeTimeToNow';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
-import type { listsSchema, requestSchema } from '@/lib/schemas';
+import type { requestSchema, waterTankersSchema } from '@/lib/schemas';
 import { cn } from '@/lib/utils';
 
 interface Props {
   currentUserId: number;
   isAdmin: boolean;
   isFiltered: boolean;
-  lists: z.infer<typeof listsSchema>;
   request: z.infer<typeof requestSchema>;
+  waterTankers: z.infer<typeof waterTankersSchema>;
 }
 
 const RequestRow: FC<Props> = (props) => {
@@ -24,18 +24,16 @@ const RequestRow: FC<Props> = (props) => {
     <TableRow
       className={cn({
         'bg-blue-50': currentUserId === request.house,
-        'opacity-50': request.requestStatus !== 'pending',
+        'opacity-50': request.status !== 'pending',
       })}
       key={request.uuid}
     >
       <TableCell className="w-[105px]">
         <div className="flex flex-col items-center justify-center">
-          {request.requestStatus === 'pending' && (
-            <span className="text-xs font-light text-nowrap">{request.street}</span>
-          )}
+          {request.status === 'pending' && <span className="text-xs font-light text-nowrap">{request.street}</span>}
           <span
             className={cn('font-bold', {
-              'text-xs': request.requestStatus !== 'pending',
+              'text-xs': request.status !== 'pending',
             })}
           >
             {request.house}
@@ -52,17 +50,17 @@ const RequestRow: FC<Props> = (props) => {
           <div>
             <BadgeStatus
               className={cn({
-                'text-[10px]': request.requestStatus !== 'pending',
+                'text-[10px]': request.status !== 'pending',
               })}
-              status={request.requestStatus}
+              status={request.status}
             />
             {!props.isFiltered && (
               <Badge className="ml-2" variant="outline">
-                {request.group}
+                {request.list}
               </Badge>
             )}
           </div>
-          {request.requestStatus === 'pending' && (
+          {request.status === 'pending' && (
             <span className="text-[10px] font-light text-balance text-center">
               Desde hace {<RelativeTimeToNow date={request.createdAt} />}
             </span>

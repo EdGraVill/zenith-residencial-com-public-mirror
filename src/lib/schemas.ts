@@ -10,24 +10,24 @@ export const waterTankerRequestComment = z.object({
 export const requestSchema = z.object({
   comments: z.array(waterTankerRequestComment),
   createdAt: z.preprocess((val) => new Date(val as string), z.date()),
-  group: z.enum(['A', 'B', 'C', 'D', 'E', 'F', 'G']),
   house: z.number(),
   isTesting: z.boolean(),
-  list: z.string(),
-  requestStatus: z.enum(['pending', 'completed', 'cancelled']),
+  list: z.enum(['1', '2', '3', '4', '5', '6', '7']),
+  status: z.enum(['pending', 'completed', 'cancelled']),
   street: z.string(),
   updatedAt: z.preprocess((val) => new Date(val as string), z.date()),
   uuid: z.string().uuid(),
+  waterTankerName: z.string(),
 });
 
-export const listSchema = z.object({
+export const waterTankerSchema = z.object({
   description: z.string(),
   id: z.number(),
-  list: z.array(requestSchema),
   name: z.string(),
+  requests: z.array(requestSchema),
 })
 
-export const listsSchema = z.record(listSchema);
+export const waterTankersSchema = z.record(waterTankerSchema);
 
-export const groups = z.enum(['A', 'B', 'C', 'D', 'E', 'F', 'G']);
-export type Group = z.infer<typeof groups>;
+export const listEnum = z.enum(['1', '2', '3', '4', '5', '6', '7']);
+export type List = z.infer<typeof listEnum>;
