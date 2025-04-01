@@ -5,11 +5,13 @@ import {
   privateHouseInformationTable,
   privateSchema,
   privateWaterTankerRequestCommentsTable,
+  privateWaterTankerRequestListEnum,
   privateWaterTankerRequestStatusEnum,
   privateWaterTankerRequestTable,
   privateWaterTankerTable,
 } from './privateSchema';
 import { publicUsersTable } from './publicSchema';
+import type { List } from '@/lib/schemas';
 
 interface Comment {
   author: number;
@@ -56,6 +58,7 @@ export const privateWaterTankerRequestView = privateSchema.view('v_water_tanker_
     .where(
       and(
         eq(privateWaterTankerRequestTable.isActive, true),
+        eq(privateWaterTankerTable.isActive, true),
         or(
           eq(privateWaterTankerRequestTable.status, privateWaterTankerRequestStatusEnum.enumValues[0]),
           between(privateWaterTankerRequestTable.updatedAt, sql`now() - interval '6 hours'`, sql`now()`),
@@ -74,4 +77,34 @@ export const privateWaterTankerRequestView = privateSchema.view('v_water_tanker_
       privateWaterTankerTable.name,
     )
     .orderBy(asc(privateWaterTankerRequestTable.createdAt)),
+);
+
+export const privateBestListView = privateSchema.view('v_best_list').as(
+  db
+    .select({
+      bestList: sql<List>`case
+        when count(case when ${privateWaterTankerRequestTable.list} = ${privateWaterTankerRequestListEnum.enumValues[0]} THEN 1 END) < 6 then ${privateWaterTankerRequestListEnum.enumValues[0]}
+        when count(case when ${privateWaterTankerRequestTable.list} = ${privateWaterTankerRequestListEnum.enumValues[1]} THEN 1 END) < 6 then ${privateWaterTankerRequestListEnum.enumValues[1]}
+        when count(case when ${privateWaterTankerRequestTable.list} = ${privateWaterTankerRequestListEnum.enumValues[2]} THEN 1 END) < 6 then ${privateWaterTankerRequestListEnum.enumValues[2]}
+        when count(case when ${privateWaterTankerRequestTable.list} = ${privateWaterTankerRequestListEnum.enumValues[3]} THEN 1 END) < 6 then ${privateWaterTankerRequestListEnum.enumValues[3]}
+        when count(case when ${privateWaterTankerRequestTable.list} = ${privateWaterTankerRequestListEnum.enumValues[4]} THEN 1 END) < 6 then ${privateWaterTankerRequestListEnum.enumValues[4]}
+        when count(case when ${privateWaterTankerRequestTable.list} = ${privateWaterTankerRequestListEnum.enumValues[5]} THEN 1 END) < 6 then ${privateWaterTankerRequestListEnum.enumValues[5]}
+        else ${privateWaterTankerRequestListEnum.enumValues[6]}
+      end`.as('best_list'),
+      id: privateWaterTankerRequestTable.id,
+      name: privateWaterTankerTable.name,
+    })
+    .from(privateWaterTankerRequestTable)
+    .innerJoin(privateWaterTankerTable, eq(privateWaterTankerRequestTable.waterTankerId, privateWaterTankerTable.id))
+    .where(
+      and(
+        eq(privateWaterTankerRequestTable.isActive, true),
+        eq(privateWaterTankerTable.isActive, true),
+        or(
+          eq(privateWaterTankerRequestTable.status, privateWaterTankerRequestStatusEnum.enumValues[0]),
+          between(privateWaterTankerRequestTable.updatedAt, sql`now() - interval '6 hours'`, sql`now()`),
+        ),
+      ),
+    )
+    .groupBy(privateWaterTankerRequestTable.id, privateWaterTankerTable.name),
 );
