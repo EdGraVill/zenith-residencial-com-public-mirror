@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
 import Auth from './Auth';
-import Pipas from './Pipas';
+import WaterTankers from './WaterTankers';
 import User from '@/controllers/User';
 import WaterTanker from '@/controllers/WaterTankerList';
 
@@ -16,7 +16,7 @@ const PipasPage: FC = async () => {
   const waterTanker = new WaterTanker(user);
 
   return (
-    <Pipas
+    <WaterTankers
       currentUserId={user.id}
       isAdmin={await waterTanker.isAdmin()}
       openRequest={await waterTanker.myOpenRequestPublic()}

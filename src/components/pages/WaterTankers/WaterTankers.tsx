@@ -3,14 +3,14 @@
 import { type FC, useEffect, useState } from 'react';
 import type { z } from 'zod';
 
-import Lists from './Lists';
+import NewTestingRequest from './AdminButtons/NewTestingRequest';
+import NewUserAction from './AdminButtons/NewUserAction';
+import NewWaterTankerAction from './AdminButtons/NewWaterTankerAction';
 import MyRequestAction from './MyRequestAction';
-import NewTestingRequest from './NewTestingRequest';
-import NewUserAction from './NewUserAction';
-import NewWaterTankerAction from './NewWaterTankerAction';
+import WaterTanker from './WaterTanker';
 import { getWaterTankers, myOpenRequestPublic } from './actions';
 import { Badge } from '@/components/ui/badge';
-import type { WaterTankers } from '@/controllers/WaterTankerList';
+import type { WaterTankers as WaterTankersType } from '@/controllers/WaterTankerList';
 import type {
   privateWaterTankerRequestCommentsTable,
   privateWaterTankerRequestTable,
@@ -24,10 +24,10 @@ interface Props {
   currentUserId: number;
   isAdmin: boolean;
   openRequest: typeof privateWaterTankerRequestView.$inferSelect | null;
-  waterTankers: WaterTankers;
+  waterTankers: WaterTankersType;
 }
 
-const Pipas: FC<Props> = ({ currentUserId, isAdmin, waterTankers, openRequest }) => {
+const WaterTankers: FC<Props> = ({ currentUserId, isAdmin, waterTankers, openRequest }) => {
   const [internalWaterTankers, setInternalWaterTankers] = useState<z.infer<typeof waterTankersSchema>>(
     waterTankersSchema.parse(waterTankers),
   );
@@ -176,10 +176,10 @@ const Pipas: FC<Props> = ({ currentUserId, isAdmin, waterTankers, openRequest })
         <MyRequestAction openRequest={internalOpenRequest} waterTankers={internalWaterTankers} />
       </nav>
       <main className="flex flex-row gap-6 flex-wrap justify-evenly">
-        <Lists currentUserId={currentUserId} isAdmin={isAdmin} waterTankers={internalWaterTankers} />
+        <WaterTanker currentUserId={currentUserId} isAdmin={isAdmin} waterTankers={internalWaterTankers} />
       </main>
     </div>
   );
 };
 
-export default Pipas;
+export default WaterTankers;

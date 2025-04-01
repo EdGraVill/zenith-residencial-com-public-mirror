@@ -1,7 +1,7 @@
 import { type FC } from 'react';
 import type { z } from 'zod';
 
-import Actions from './Actions';
+import ActionsButton from './ActionsButton';
 import BadgeStatus from './BadgeStatus';
 import RelativeTimeToNow from '@/components/common/RelativeTimeToNow';
 import { Badge } from '@/components/ui/badge';
@@ -68,7 +68,7 @@ const RequestRow: FC<Props> = (props) => {
         </div>
       </TableCell>
       <TableCell className="w-[120px] flex flex-row justify-center">
-        <Actions {...props} />
+        <ActionsButton {...props} />
       </TableCell>
     </TableRow>
   );
