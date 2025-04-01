@@ -33,6 +33,7 @@
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.41.0",
+    "entropy-string": "^4.2.0",
     "jose": "^6.0.10",
     "lucide-react": "^0.485.0",
     "next": "15.2.4",
@@ -47,6 +48,7 @@
   "devDependencies": {
     "@apptoolkit/eslint-config": "^0.5.1",
     "@tailwindcss/postcss": "^4",
+    "@types/entropy-string": "^4.2.3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

@@ -1,4 +1,5 @@
 import { and, eq } from 'drizzle-orm';
+import { Entropy } from 'entropy-string';
 
 import type User from './User';
 import { db } from '@/db';
@@ -62,6 +63,56 @@ export default class WaterTankerList {
         description,
         name,
       })
+      .returning();
+
+    return waterTankerListTable[0];
+  }
+
+  public async updateList(id: number, name?: string, description?: string) {
+    const isAdmin = await this.isAdmin();
+
+    if (!isAdmin) {
+      throw new Error('Forbidden');
+    }
+
+    if (!name && !description) {
+      throw new Error('Forbidden');
+    }
+
+    const waterTankerListTable = await db
+      .update(privateWaterTankerRequestListTable)
+      .set({
+        ...(name ? { name } : {}),
+        ...(description ? { description } : {}),
+      })
+      .where(eq(privateWaterTankerRequestListTable.id, id))
+      .returning();
+
+    return waterTankerListTable[0];
+  }
+
+  public async removeList(id: number) {
+    const isAdmin = await this.isAdmin();
+
+    if (!isAdmin) {
+      throw new Error('Forbidden');
+    }
+
+    const waterTankerListTableToDelete = await db
+      .select()
+      .from(privateWaterTankerRequestListTable)
+      .where(eq(privateWaterTankerRequestListTable.id, id))
+      .limit(1);
+
+    const entropy = new Entropy();
+
+    const waterTankerListTable = await db
+      .update(privateWaterTankerRequestListTable)
+      .set({
+        isActive: false,
+        name: `deleted_${entropy.smallID()}_${waterTankerListTableToDelete[0].name}`,
+      })
+      .where(eq(privateWaterTankerRequestListTable.id, id))
       .returning();
 
     return waterTankerListTable[0];

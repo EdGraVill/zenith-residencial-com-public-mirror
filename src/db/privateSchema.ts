@@ -25,6 +25,7 @@ export const privateWaterTankerRequestListTable = privateSchema.table('water_tan
   ...pk,
   ...timestamps,
   description: t.text('description').notNull(),
+  isActive: t.boolean('is_active').notNull().default(true),
   name: t.text('name').notNull().unique(),
 });
 
