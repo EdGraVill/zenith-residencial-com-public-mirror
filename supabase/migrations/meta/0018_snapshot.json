@@ -1,0 +1,793 @@
+{
+  "id": "5855568f-1b65-4d32-832d-cd0e68edd1cf",
+  "prevId": "210d2e52-2997-4225-a6dc-9629d826e14b",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "house": {
+          "name": "house",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "private.admins": {
+      "name": "admins",
+      "schema": "private",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "admins_user_id_users_id_fk": {
+          "name": "admins_user_id_users_id_fk",
+          "tableFrom": "admins",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "private.contact_information": {
+      "name": "contact_information",
+      "schema": "private",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "phone": {
+          "name": "phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "contact_information_user_id_users_id_fk": {
+          "name": "contact_information_user_id_users_id_fk",
+          "tableFrom": "contact_information",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "contact_information_phone_unique": {
+          "name": "contact_information_phone_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "phone"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "private.house_information": {
+      "name": "house_information",
+      "schema": "private",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "street": {
+          "name": "street",
+          "type": "street",
+          "typeSchema": "private",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "house_information_user_id_users_id_fk": {
+          "name": "house_information_user_id_users_id_fk",
+          "tableFrom": "house_information",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "house_information_user_id_unique": {
+          "name": "house_information_user_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "user_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "private.water_tanker_request_comments": {
+      "name": "water_tanker_request_comments",
+      "schema": "private",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "comment": {
+          "name": "comment",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "water_tanker_request_id": {
+          "name": "water_tanker_request_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "water_tanker_request_comments_user_id_users_id_fk": {
+          "name": "water_tanker_request_comments_user_id_users_id_fk",
+          "tableFrom": "water_tanker_request_comments",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "water_tanker_request_comments_water_tanker_request_id_water_tanker_request_id_fk": {
+          "name": "water_tanker_request_comments_water_tanker_request_id_water_tanker_request_id_fk",
+          "tableFrom": "water_tanker_request_comments",
+          "tableTo": "water_tanker_request",
+          "schemaTo": "private",
+          "columnsFrom": [
+            "water_tanker_request_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "private.water_tanker_request": {
+      "name": "water_tanker_request",
+      "schema": "private",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "is_testing": {
+          "name": "is_testing",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "list": {
+          "name": "list",
+          "type": "water_tanker_request_list",
+          "typeSchema": "private",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "water_tanker_request_status",
+          "typeSchema": "private",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "tester_user_id": {
+          "name": "tester_user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "uuid": {
+          "name": "uuid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "water_tanker_id": {
+          "name": "water_tanker_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "water_tanker_request_tester_user_id_users_id_fk": {
+          "name": "water_tanker_request_tester_user_id_users_id_fk",
+          "tableFrom": "water_tanker_request",
+          "tableTo": "users",
+          "columnsFrom": [
+            "tester_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "water_tanker_request_user_id_users_id_fk": {
+          "name": "water_tanker_request_user_id_users_id_fk",
+          "tableFrom": "water_tanker_request",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "water_tanker_request_water_tanker_id_water_tanker_id_fk": {
+          "name": "water_tanker_request_water_tanker_id_water_tanker_id_fk",
+          "tableFrom": "water_tanker_request",
+          "tableTo": "water_tanker",
+          "schemaTo": "private",
+          "columnsFrom": [
+            "water_tanker_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "water_tanker_request_uuid_unique": {
+          "name": "water_tanker_request_uuid_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "uuid"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "private.water_tanker": {
+      "name": "water_tanker",
+      "schema": "private",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "water_tanker_name_unique": {
+          "name": "water_tanker_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "hidden.access_hr": {
+      "name": "access_hr",
+      "schema": "hidden",
+      "columns": {
+        "client_user_agent": {
+          "name": "client_user_agent",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "ip": {
+          "name": "ip",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phone": {
+          "name": "phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "hidden.water_tanker_request_hr": {
+      "name": "water_tanker_request_hr",
+      "schema": "hidden",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "is_testing": {
+          "name": "is_testing",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "list": {
+          "name": "list",
+          "type": "water_tanker_request_list",
+          "typeSchema": "private",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "water_tanker_request_status",
+          "typeSchema": "private",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "water_tanker_request_id": {
+          "name": "water_tanker_request_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "water_tanker_request_hr_user_id_users_id_fk": {
+          "name": "water_tanker_request_hr_user_id_users_id_fk",
+          "tableFrom": "water_tanker_request_hr",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "water_tanker_request_hr_water_tanker_request_id_water_tanker_request_id_fk": {
+          "name": "water_tanker_request_hr_water_tanker_request_id_water_tanker_request_id_fk",
+          "tableFrom": "water_tanker_request_hr",
+          "tableTo": "water_tanker_request",
+          "schemaTo": "private",
+          "columnsFrom": [
+            "water_tanker_request_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "private.street": {
+      "name": "street",
+      "schema": "private",
+      "values": [
+        "Zenith Oriente",
+        "Zenith Norte",
+        "Meridiano",
+        "Zenith Poniente",
+        "Horizonte",
+        "Nadir Poniente",
+        "Nadir Sur",
+        "Nadir Oriente",
+        "Tropico",
+        "Ecuador"
+      ]
+    },
+    "private.water_tanker_request_list": {
+      "name": "water_tanker_request_list",
+      "schema": "private",
+      "values": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ]
+    },
+    "private.water_tanker_request_status": {
+      "name": "water_tanker_request_status",
+      "schema": "private",
+      "values": [
+        "pending",
+        "completed",
+        "cancelled"
+      ]
+    }
+  },
+  "schemas": {
+    "private": "private",
+    "hidden": "hidden"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {
+    "private.v_best_list": {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "definition": "select case\n        when count(case when \"private\".\"water_tanker_request\".\"list\" = '1' THEN 1 END) < 6 then '1'\n        when count(case when \"private\".\"water_tanker_request\".\"list\" = '2' THEN 1 END) < 6 then '2'\n        when count(case when \"private\".\"water_tanker_request\".\"list\" = '3' THEN 1 END) < 6 then '3'\n        when count(case when \"private\".\"water_tanker_request\".\"list\" = '4' THEN 1 END) < 6 then '4'\n        when count(case when \"private\".\"water_tanker_request\".\"list\" = '5' THEN 1 END) < 6 then '5'\n        when count(case when \"private\".\"water_tanker_request\".\"list\" = '6' THEN 1 END) < 6 then '6'\n        else '7'\n      end as \"best_list\", \"private\".\"water_tanker_request\".\"id\", \"private\".\"water_tanker\".\"name\" from \"private\".\"water_tanker_request\" inner join \"private\".\"water_tanker\" on \"private\".\"water_tanker_request\".\"water_tanker_id\" = \"private\".\"water_tanker\".\"id\" where (\"private\".\"water_tanker_request\".\"is_active\" = true and \"private\".\"water_tanker\".\"is_active\" = true and (\"private\".\"water_tanker_request\".\"status\" = 'pending' or \"private\".\"water_tanker_request\".\"updated_at\" between now() - interval '6 hours' and now())) group by \"private\".\"water_tanker_request\".\"id\", \"private\".\"water_tanker\".\"name\"",
+      "name": "v_best_list",
+      "schema": "private",
+      "isExisting": false,
+      "materialized": false
+    },
+    "private.v_water_tanker_request": {
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "house": {
+          "name": "house",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_testing": {
+          "name": "is_testing",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "list": {
+          "name": "list",
+          "type": "water_tanker_request_list",
+          "typeSchema": "private",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "water_tanker_request_status",
+          "typeSchema": "private",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "street": {
+          "name": "street",
+          "type": "street",
+          "typeSchema": "private",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "uuid": {
+          "name": "uuid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        }
+      },
+      "definition": "select coalesce(\n        json_agg(\n          json_build_object(\n            'author', \"private\".\"water_tanker_request_comments\".\"user_id\",\n            'comment', \"private\".\"water_tanker_request_comments\".\"comment\",\n            'createdAt', \"private\".\"water_tanker_request_comments\".\"created_at\",\n            'id', \"private\".\"water_tanker_request_comments\".\"id\"\n          )\n        ) filter (where water_tanker_request_comments is not null),\n        '[]'::json\n      ) as \"comments\", \"private\".\"water_tanker_request\".\"created_at\", \"users\".\"house\", \"private\".\"water_tanker_request\".\"is_testing\", \"private\".\"water_tanker_request\".\"list\", \"private\".\"water_tanker_request\".\"status\", \"private\".\"house_information\".\"street\", \"private\".\"water_tanker_request\".\"updated_at\", \"private\".\"water_tanker_request\".\"uuid\", \"private\".\"water_tanker\".\"name\" as \"water_tanker_name\" from \"private\".\"water_tanker_request\" inner join \"private\".\"water_tanker\" on \"private\".\"water_tanker_request\".\"water_tanker_id\" = \"private\".\"water_tanker\".\"id\" inner join \"users\" on \"private\".\"water_tanker_request\".\"user_id\" = \"users\".\"id\" inner join \"private\".\"house_information\" on \"private\".\"water_tanker_request\".\"user_id\" = \"private\".\"house_information\".\"user_id\" left join \"private\".\"water_tanker_request_comments\" on \"private\".\"water_tanker_request\".\"id\" = \"private\".\"water_tanker_request_comments\".\"water_tanker_request_id\" where (\"private\".\"water_tanker_request\".\"is_active\" = true and \"private\".\"water_tanker\".\"is_active\" = true and (\"private\".\"water_tanker_request\".\"status\" = 'pending' or \"private\".\"water_tanker_request\".\"updated_at\" between now() - interval '6 hours' and now())) group by \"private\".\"water_tanker_request\".\"created_at\", \"users\".\"house\", \"private\".\"water_tanker_request\".\"is_testing\", \"private\".\"water_tanker_request\".\"list\", \"private\".\"water_tanker_request\".\"status\", \"private\".\"house_information\".\"street\", \"private\".\"water_tanker_request\".\"updated_at\", \"private\".\"water_tanker_request\".\"uuid\", \"private\".\"water_tanker\".\"name\" order by \"private\".\"water_tanker_request\".\"created_at\" asc",
+      "name": "v_water_tanker_request",
+      "schema": "private",
+      "isExisting": false,
+      "materialized": false
+    }
+  },
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

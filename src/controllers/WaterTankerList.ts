@@ -6,11 +6,12 @@ import { db } from '@/db';
 import { hiddenWaterTankerRequestHRTable } from '@/db/hiddenSchema';
 import {
   privateWaterTankerRequestCommentsTable,
+  privateWaterTankerRequestListEnum,
   privateWaterTankerRequestStatusEnum,
   privateWaterTankerRequestTable,
   privateWaterTankerTable,
 } from '@/db/privateSchema';
-import { privateWaterTankerRequestView } from '@/db/privateViews';
+import { privateBestListView, privateWaterTankerRequestView } from '@/db/privateViews';
 import type { List } from '@/lib/schemas';
 
 export type WaterTankers = Record<
@@ -24,6 +25,20 @@ export type WaterTankers = Record<
 >;
 
 export default class WaterTanker {
+  public static async getBestList(waterTankerId: number): Promise<List> {
+    const bestListView = await db
+      .select()
+      .from(privateBestListView)
+      .where(eq(privateBestListView.id, waterTankerId))
+      .limit(1);
+
+    if (!bestListView.length) {
+      return privateWaterTankerRequestListEnum.enumValues[0];
+    }
+
+    return bestListView[0].bestList;
+  }
+
   public static async getWaterTankers(): Promise<WaterTankers> {
     const waterTankerTable = await db.select().from(privateWaterTankerTable);
 
@@ -292,10 +307,12 @@ export default class WaterTanker {
 
     let createdRequest: typeof privateWaterTankerRequestTable.$inferSelect;
 
+    const bestList = await WaterTanker.getBestList(waterTankerId);
+
     if (canceledRequest.isTesting) {
-      createdRequest = await this.addTestingRequest(canceledRequest.userId, waterTankerId, canceledRequest.list);
+      createdRequest = await this.addTestingRequest(canceledRequest.userId, waterTankerId, bestList);
     } else {
-      createdRequest = await this.createRequest(waterTankerId, canceledRequest.list);
+      createdRequest = await this.createRequest(waterTankerId, bestList);
     }
 
     const canceledWaterTanker = await db
