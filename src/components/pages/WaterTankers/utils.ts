@@ -92,7 +92,7 @@ export const setWaterTankerShowNonPending =
     const newState = structuredClone(prevState);
 
     notIncludedInPrevState.forEach((waterTankerName) => {
-      newState[waterTankerName] = true;
+      newState[waterTankerName] = false;
     });
 
     notIncludedInIncomingListNames.forEach((waterTankerName) => {
