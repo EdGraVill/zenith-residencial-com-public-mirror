@@ -63,7 +63,7 @@ const NewUserAction: FC<Props> = ({ isAdmin }) => {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Agregar usuario</DialogTitle>
-          <DialogDescription>Asociar teléfono con casa</DialogDescription>
+          <DialogDescription>Asociar teléfono con casa.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -96,6 +96,15 @@ const NewUserAction: FC<Props> = ({ isAdmin }) => {
               />
             </div>
             <FormMessage />
+            <ul className="pl-4 text-sm text-muted-foreground mt-6">
+              <li className="list-disc">
+                Una UP puede tener múltiples teléfonos asignados, pero los teléfonos no se pueden repetir.
+              </li>
+              <li className="list-disc">
+                Por seguridad, no hay forma de saber si un teléfono está repetido, si después de agregarlo aquí, la UP
+                sigue sin poder acceder, contactar a Eduardo (3333714197)
+              </li>
+            </ul>
             <DialogFooter className="mt-6 flex justify-end">
               <Button disabled={form.formState.isSubmitting} type="submit">
                 Registrar {form.formState.isSubmitting && <Loader2 className="animate-spin" />}
