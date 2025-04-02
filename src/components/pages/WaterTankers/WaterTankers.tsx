@@ -3,15 +3,18 @@
 import { type FC, useEffect, useState } from 'react';
 import type { z } from 'zod';
 
+import AdminNoticesAction from './AdminButtons/AdminNoticesAction';
 import AdminWaterTankersAction from './AdminButtons/AdminWaterTankersAction';
 import NewTestingRequest from './AdminButtons/NewTestingRequest';
 import NewUserAction from './AdminButtons/NewUserAction';
 import MyRequestAction from './MyRequestAction';
+import Notices from './Notices';
 import WaterTanker from './WaterTanker';
-import { getWaterTankers, myOpenRequestPublic } from './actions';
+import { getNotices, getWaterTankers, myOpenRequestPublic } from './actions';
 import { Badge } from '@/components/ui/badge';
 import type { WaterTankers as WaterTankersType } from '@/controllers/WaterTankerList';
 import type {
+  privateNoticesTable,
   privateWaterTankerRequestCommentsTable,
   privateWaterTankerRequestTable,
   privateWaterTankerTable,
@@ -23,17 +26,20 @@ import supabase from '@/utils/supabase/client';
 interface Props {
   currentUserId: number;
   isAdmin: boolean;
+  notices: Omit<typeof privateNoticesTable.$inferSelect, 'userId'>[];
   openRequest: typeof privateWaterTankerRequestView.$inferSelect | null;
   waterTankers: WaterTankersType;
 }
 
-const WaterTankers: FC<Props> = ({ currentUserId, isAdmin, waterTankers, openRequest }) => {
+const WaterTankers: FC<Props> = ({ currentUserId, isAdmin, notices, waterTankers, openRequest }) => {
   const [internalWaterTankers, setInternalWaterTankers] = useState<z.infer<typeof waterTankersSchema>>(
     waterTankersSchema.parse(waterTankers),
   );
   const [internalOpenRequest, setInternalOpenRequest] = useState<
     typeof privateWaterTankerRequestView.$inferSelect | null
   >(openRequest);
+  const [internalNotices, setInternalNotices] =
+    useState<Omit<typeof privateNoticesTable.$inferSelect, 'userId'>[]>(notices);
 
   useEffect(() => {
     setInternalWaterTankers(waterTankersSchema.parse(waterTankers));
@@ -42,6 +48,10 @@ const WaterTankers: FC<Props> = ({ currentUserId, isAdmin, waterTankers, openReq
   useEffect(() => {
     setInternalOpenRequest(openRequest);
   }, [openRequest]);
+
+  useEffect(() => {
+    setInternalNotices(notices);
+  }, [notices]);
 
   useEffect(() => {
     const channel = supabase
@@ -160,6 +170,48 @@ const WaterTankers: FC<Props> = ({ currentUserId, isAdmin, waterTankers, openReq
     };
   }, []);
 
+  useEffect(() => {
+    const channel = supabase
+      .channel('notices_insert')
+      .on<typeof privateWaterTankerRequestCommentsTable.$inferSelect>(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'private',
+          table: 'notices',
+        },
+        () => {
+          getNotices().then((newNotices) => setInternalNotices(newNotices));
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('notices_update')
+      .on<typeof privateWaterTankerRequestCommentsTable.$inferSelect>(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'private',
+          table: 'notices',
+        },
+        () => {
+          getNotices().then((newNotices) => setInternalNotices(newNotices));
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   return (
     <div className="container py-8">
       <header className="flex flex-col items-center">
@@ -168,6 +220,7 @@ const WaterTankers: FC<Props> = ({ currentUserId, isAdmin, waterTankers, openReq
         {isAdmin && <Badge className="bg-amber-200 text-amber-950">Admin</Badge>}
       </header>
       <aside className="my-8 flex flex-row gap-4 flex-wrap justify-center">
+        <AdminNoticesAction isAdmin={isAdmin} notices={internalNotices} />
         <AdminWaterTankersAction isAdmin={isAdmin} waterTankers={internalWaterTankers} />
         <NewUserAction isAdmin={isAdmin} />
         <NewTestingRequest isAdmin={isAdmin} waterTankers={internalWaterTankers} />
@@ -175,6 +228,7 @@ const WaterTankers: FC<Props> = ({ currentUserId, isAdmin, waterTankers, openReq
       <nav className="my-8 flex flex-row flex-wrap gap-6 justify-center">
         <MyRequestAction openRequest={internalOpenRequest} waterTankers={internalWaterTankers} />
       </nav>
+      <Notices notices={internalNotices} />
       <main className="flex flex-row gap-6 flex-wrap justify-evenly">
         <WaterTanker currentUserId={currentUserId} isAdmin={isAdmin} waterTankers={internalWaterTankers} />
       </main>

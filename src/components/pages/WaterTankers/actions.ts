@@ -1,7 +1,9 @@
 'use server';
 
+import Notice from '@/controllers/Notice';
 import User from '@/controllers/User';
 import WaterTanker from '@/controllers/WaterTankerList';
+import type { privateNoticesTable } from '@/db/privateSchema';
 import type { List } from '@/lib/schemas';
 
 export async function auth(phone: string) {
@@ -238,6 +240,70 @@ export async function removeWaterTanker(waterTankerId: number) {
     const waterTanker = new WaterTanker(user);
 
     await waterTanker.removeWaterTanker(waterTankerId);
+  } catch (error) {
+    return null;
+  }
+}
+
+export async function getNotices() {
+  const user = await User.getUserByCookies();
+
+  if (!user) {
+    return [] as Omit<typeof privateNoticesTable.$inferSelect, 'userId'>[];
+  }
+
+  try {
+    const notices = await Notice.getNotices();
+
+    return notices;
+  } catch (error) {
+    return [] as Omit<typeof privateNoticesTable.$inferSelect, 'userId'>[];
+  }
+}
+
+export async function createNotice(notice: string) {
+  const user = await User.getUserByCookies();
+
+  if (!user) {
+    return null;
+  }
+
+  try {
+    const noticeInstance = new Notice(user);
+
+    await noticeInstance.createNotice(notice);
+  } catch (error) {
+    return null;
+  }
+}
+
+export async function updateNotice(noticeId: number, notice: string) {
+  const user = await User.getUserByCookies();
+
+  if (!user) {
+    return null;
+  }
+
+  try {
+    const noticeInstance = new Notice(user);
+
+    await noticeInstance.updateNotice(noticeId, notice);
+  } catch (error) {
+    return null;
+  }
+}
+
+export async function removeNotice(noticeId: number) {
+  const user = await User.getUserByCookies();
+
+  if (!user) {
+    return null;
+  }
+
+  try {
+    const noticeInstance = new Notice(user);
+
+    await noticeInstance.removeNotice(noticeId);
   } catch (error) {
     return null;
   }

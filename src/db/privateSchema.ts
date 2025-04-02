@@ -105,3 +105,14 @@ export const privateHouseInformationTable = privateSchema.table('house_informati
     .unique()
     .references(() => publicUsersTable.id),
 });
+
+export const privateNoticesTable = privateSchema.table('notices', {
+  ...pk,
+  ...timestamps,
+  isActive: t.boolean('is_active').notNull().default(true),
+  notice: t.text('notice').notNull(),
+  userId: t
+    .integer('user_id')
+    .notNull()
+    .references(() => publicUsersTable.id),
+});
