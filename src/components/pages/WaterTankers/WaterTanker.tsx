@@ -1,9 +1,19 @@
-import { type FC, useEffect, useState } from 'react';
+'use client';
+
+import { type FC, useEffect, useId, useState } from 'react';
 import type { z } from 'zod';
 
 import RequestRow from './RequestRow';
-import { setWaterTankerSelectedList, updateWaterTankerSelectedList } from './utils';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  setWaterTankerSelectedList,
+  setWaterTankerShowNonPending,
+  updateWaterTankerSelectedList,
+  updateWaterTankerShowNonPending,
+} from './utils';
+import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { List, waterTankersSchema } from '@/lib/schemas';
 
@@ -14,12 +24,21 @@ interface ListsProps {
 }
 
 const WaterTanker: FC<ListsProps> = ({ currentUserId, isAdmin, waterTankers }) => {
+  const [showNonPending, setShowNonPending] = useState<Record<string, boolean>>(
+    setWaterTankerShowNonPending(waterTankers)(),
+  );
   const [selectedList, setSelectedList] = useState<Record<string, List | 'all'>>(
     setWaterTankerSelectedList(waterTankers)(),
   );
 
+  const switchId = useId();
+
   useEffect(() => {
     setSelectedList(setWaterTankerSelectedList(waterTankers));
+  }, [waterTankers]);
+
+  useEffect(() => {
+    setShowNonPending(setWaterTankerShowNonPending(waterTankers));
   }, [waterTankers]);
 
   return (
@@ -28,9 +47,9 @@ const WaterTanker: FC<ListsProps> = ({ currentUserId, isAdmin, waterTankers }) =
         const waterTanker = waterTankers[waterTankerName];
         const currentList = selectedList[waterTankerName];
 
-        const filteredRequests = waterTanker.requests.filter(
-          ({ list }) => currentList === 'all' || currentList === list,
-        );
+        const filteredRequests = waterTanker.requests
+          .filter(({ list }) => currentList === 'all' || currentList === list)
+          .filter(({ status }) => status === 'pending' || showNonPending[waterTankerName]);
 
         return (
           <div className="max-w-md" data-water-tanker-name={waterTankerName} key={waterTanker.id}>
@@ -49,7 +68,13 @@ const WaterTanker: FC<ListsProps> = ({ currentUserId, isAdmin, waterTankers }) =
                   value="all"
                 >
                   <span className="text-sm/3">Todos</span>
-                  <span className="text-[9px]">{waterTanker.requests.length}</span>
+                  <span className="text-[9px]">
+                    {
+                      waterTanker.requests.filter(
+                        ({ status }) => status === 'pending' || showNonPending[waterTankerName],
+                      ).length
+                    }
+                  </span>
                 </ToggleGroupItem>
                 {['1', '2', '3', '4', '5', '6', '7'].map((list) => (
                   <ToggleGroupItem
@@ -60,7 +85,11 @@ const WaterTanker: FC<ListsProps> = ({ currentUserId, isAdmin, waterTankers }) =
                   >
                     <span className="text-sm/3">{list}</span>
                     <span className="text-[9px]">
-                      {waterTanker.requests.filter((request) => request.list === list).length}
+                      {
+                        waterTanker.requests
+                          .filter((request) => request.list === list)
+                          .filter(({ status }) => status === 'pending' || showNonPending[waterTankerName]).length
+                      }
                     </span>
                   </ToggleGroupItem>
                 ))}
@@ -95,6 +124,21 @@ const WaterTanker: FC<ListsProps> = ({ currentUserId, isAdmin, waterTankers }) =
                   />
                 ))}
               </TableBody>
+              <TableFooter>
+                <TableCell colSpan={3}>
+                  <div className="flex items-center justify-end gap-6 py-2">
+                    <Label className="text-xs" htmlFor={switchId}>
+                      Mostrar <Badge className="bg-red-100 text-red-800 opacity-50 scale-75 -m-2">Cancelados</Badge> y{' '}
+                      <Badge className="bg-green-100 text-green-800 opacity-50 scale-75 -m-2">Completados</Badge>
+                    </Label>
+                    <Switch
+                      checked={showNonPending[waterTankerName]}
+                      id={switchId}
+                      onCheckedChange={updateWaterTankerShowNonPending(waterTankerName, setShowNonPending)}
+                    />
+                  </div>
+                </TableCell>
+              </TableFooter>
             </Table>
           </div>
         );
