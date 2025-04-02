@@ -40,7 +40,10 @@ export default class WaterTanker {
   }
 
   public static async getWaterTankers(): Promise<WaterTankers> {
-    const waterTankerTable = await db.select().from(privateWaterTankerTable);
+    const waterTankerTable = await db
+      .select()
+      .from(privateWaterTankerTable)
+      .where(eq(privateWaterTankerTable.isActive, true));
 
     const waterTankerRequestView = await db.select().from(privateWaterTankerRequestView);
     const waterTankers: WaterTankers = waterTankerTable.reduce(
