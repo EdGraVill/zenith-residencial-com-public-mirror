@@ -3,9 +3,9 @@
 import { type FC, useEffect, useState } from 'react';
 import type { z } from 'zod';
 
+import AdminWaterTankersAction from './AdminButtons/AdminWaterTankersAction';
 import NewTestingRequest from './AdminButtons/NewTestingRequest';
 import NewUserAction from './AdminButtons/NewUserAction';
-import NewWaterTankerAction from './AdminButtons/NewWaterTankerAction';
 import MyRequestAction from './MyRequestAction';
 import WaterTanker from './WaterTanker';
 import { getWaterTankers, myOpenRequestPublic } from './actions';
@@ -168,7 +168,7 @@ const WaterTankers: FC<Props> = ({ currentUserId, isAdmin, waterTankers, openReq
         {isAdmin && <Badge className="bg-amber-200 text-amber-950">Admin</Badge>}
       </header>
       <aside className="my-8 flex flex-row gap-4 flex-wrap justify-center">
-        <NewWaterTankerAction isAdmin={isAdmin} />
+        <AdminWaterTankersAction isAdmin={isAdmin} waterTankers={internalWaterTankers} />
         <NewUserAction isAdmin={isAdmin} />
         <NewTestingRequest isAdmin={isAdmin} waterTankers={internalWaterTankers} />
       </aside>

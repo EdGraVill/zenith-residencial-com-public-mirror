@@ -210,3 +210,35 @@ export async function moveRequestToList(list: List, requestUUID: string) {
     return null;
   }
 }
+
+export async function updateWaterTanker(waterTankerId: number, name: string, description: string) {
+  const user = await User.getUserByCookies();
+
+  if (!user) {
+    return null;
+  }
+
+  try {
+    const waterTanker = new WaterTanker(user);
+
+    return waterTanker.updateWaterTanker(waterTankerId, name, description);
+  } catch (error) {
+    return null;
+  }
+}
+
+export async function removeWaterTanker(waterTankerId: number) {
+  const user = await User.getUserByCookies();
+
+  if (!user) {
+    return null;
+  }
+
+  try {
+    const waterTanker = new WaterTanker(user);
+
+    await waterTanker.removeWaterTanker(waterTankerId);
+  } catch (error) {
+    return null;
+  }
+}
