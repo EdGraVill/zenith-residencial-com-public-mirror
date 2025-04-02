@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import { Entropy } from 'entropy-string';
 
 import type User from './User';
@@ -43,7 +43,8 @@ export default class WaterTanker {
     const waterTankerTable = await db
       .select()
       .from(privateWaterTankerTable)
-      .where(eq(privateWaterTankerTable.isActive, true));
+      .where(eq(privateWaterTankerTable.isActive, true))
+      .orderBy(asc(privateWaterTankerTable.createdAt));
 
     const waterTankerRequestView = await db.select().from(privateWaterTankerRequestView);
     const waterTankers: WaterTankers = waterTankerTable.reduce(
