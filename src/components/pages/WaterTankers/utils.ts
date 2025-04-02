@@ -75,6 +75,47 @@ export const updateWaterTankerSelectedList =
       return newState;
     });
 
+export const setWaterTankerShowNonPending =
+  (waterTankers: z.infer<typeof waterTankersSchema>) =>
+  (prevState: Record<string, boolean> = {}) => {
+    const waterTankerNames = Object.keys(waterTankers);
+
+    const notIncludedInPrevState = waterTankerNames.filter((waterTankerName) => !prevState[waterTankerName]);
+    const notIncludedInIncomingListNames = Object.keys(prevState).filter(
+      (waterTankerName) => !waterTankerNames.includes(waterTankerName),
+    );
+
+    if (!notIncludedInPrevState.length && !notIncludedInIncomingListNames.length) {
+      return prevState;
+    }
+
+    const newState = structuredClone(prevState);
+
+    notIncludedInPrevState.forEach((waterTankerName) => {
+      newState[waterTankerName] = true;
+    });
+
+    notIncludedInIncomingListNames.forEach((waterTankerName) => {
+      delete newState[waterTankerName];
+    });
+
+    return newState;
+  };
+
+export const updateWaterTankerShowNonPending =
+  (waterTankerName: string, setShowNonPending: Dispatch<SetStateAction<Record<string, boolean>>>) =>
+  (showNonPending: boolean) =>
+    setShowNonPending((prevState) => {
+      if (prevState[waterTankerName] === showNonPending) {
+        return prevState;
+      }
+
+      const newState = structuredClone(prevState);
+      newState[waterTankerName] = showNonPending;
+
+      return newState;
+    });
+
 export const getBestList = (waterTankers: z.infer<typeof waterTankersSchema>, waterTankerName: string) => {
   if (!waterTankerName) {
     return '1';
