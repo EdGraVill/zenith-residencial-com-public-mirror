@@ -1,6 +1,7 @@
 'use client';
 
-import { type FC, useEffect, useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
+import type { Dispatch, FC, SetStateAction } from 'react';
 import type { z } from 'zod';
 
 import RequestRow from './RequestRow';
@@ -41,6 +42,21 @@ const WaterTanker: FC<ListsProps> = ({ currentUserId, isAdmin, waterTankers }) =
     setShowNonPending(setWaterTankerShowNonPending(waterTankers));
   }, [waterTankers]);
 
+  const selectedListWithAutoscroll =
+    (waterTankerName: string): Dispatch<SetStateAction<Record<string, List | 'all'>>> =>
+    (newState) => {
+      setSelectedList(newState);
+
+      const bodyTable = document.getElementById(`body-${waterTankerName}`);
+
+      if (bodyTable) {
+        window.scrollTo({
+          behavior: 'instant',
+          top: bodyTable.getBoundingClientRect().top + window.scrollY - 166,
+        });
+      }
+    };
+
   return (
     <>
       {Object.keys(waterTankers).map((waterTankerName) => {
@@ -52,58 +68,64 @@ const WaterTanker: FC<ListsProps> = ({ currentUserId, isAdmin, waterTankers }) =
           .filter(({ status }) => status === 'pending' || showNonPending[waterTankerName]);
 
         return (
-          <div className="max-w-md" data-water-tanker-name={waterTankerName} key={waterTanker.id}>
-            <header className="flex flex-col items-center">
-              <h3 className="text-xl">{waterTanker.name}</h3>
-              <p className="text-sm p-2 text-balance bg-zinc-100 w-full">{waterTanker.description}</p>
-              <ToggleGroup
-                className="w-full"
-                onValueChange={updateWaterTankerSelectedList(waterTankerName, setSelectedList)}
-                type="single"
-                value={currentList}
-              >
-                <ToggleGroupItem
-                  aria-label="Todos"
-                  className="data-[state=on]:bg-black data-[state=on]:text-white first:rounded-none flex flex-col items-center gap-0"
-                  value="all"
-                >
-                  <span className="text-sm/3">Todos</span>
-                  <span className="text-[9px]">
-                    {
-                      waterTanker.requests.filter(
-                        ({ status }) => status === 'pending' || showNonPending[waterTankerName],
-                      ).length
-                    }
-                  </span>
-                </ToggleGroupItem>
-                {['1', '2', '3', '4', '5', '6', '7'].map((list) => (
-                  <ToggleGroupItem
-                    aria-label={list}
-                    className="data-[state=on]:bg-black data-[state=on]:text-white last:rounded-none flex flex-col items-center gap-0"
-                    key={list}
-                    value={list}
-                  >
-                    <span className="text-sm/3">{list}</span>
-                    <span className="text-[9px]">
-                      {
-                        waterTanker.requests
-                          .filter((request) => request.list === list)
-                          .filter(({ status }) => status === 'pending' || showNonPending[waterTankerName]).length
-                      }
-                    </span>
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-            </header>
-            <Table className="border border-t-0">
-              <TableHeader className="border border-black">
+          <div className="max-w-md relative" data-water-tanker-name={waterTankerName} key={waterTanker.id}>
+            <header className=""></header>
+            <Table>
+              <TableHeader className="sticky top-0 bg-white z-10">
+                <TableRow className="border-b-0!">
+                  <TableHead className="p-0" colSpan={3}>
+                    <h3 className="text-xl text-center pt-5">{waterTanker.name}</h3>
+                    <p className="text-sm p-2 text-balance bg-zinc-100 w-full">{waterTanker.description}</p>
+                    <ToggleGroup
+                      className="w-full"
+                      onValueChange={updateWaterTankerSelectedList(
+                        waterTankerName,
+                        selectedListWithAutoscroll(waterTankerName),
+                      )}
+                      type="single"
+                      value={currentList}
+                    >
+                      <ToggleGroupItem
+                        aria-label="Todos"
+                        className="data-[state=on]:bg-black data-[state=on]:text-white first:rounded-none flex flex-col items-center gap-0"
+                        value="all"
+                      >
+                        <span className="text-sm/3">Todos</span>
+                        <span className="text-[9px]">
+                          {
+                            waterTanker.requests.filter(
+                              ({ status }) => status === 'pending' || showNonPending[waterTankerName],
+                            ).length
+                          }
+                        </span>
+                      </ToggleGroupItem>
+                      {['1', '2', '3', '4', '5', '6', '7'].map((list) => (
+                        <ToggleGroupItem
+                          aria-label={list}
+                          className="data-[state=on]:bg-black data-[state=on]:text-white last:rounded-none flex flex-col items-center gap-0"
+                          key={list}
+                          value={list}
+                        >
+                          <span className="text-sm/3">{list}</span>
+                          <span className="text-[9px]">
+                            {
+                              waterTanker.requests
+                                .filter((request) => request.list === list)
+                                .filter(({ status }) => status === 'pending' || showNonPending[waterTankerName]).length
+                            }
+                          </span>
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                  </TableHead>
+                </TableRow>
                 <TableRow className="bg-black hover:bg-black">
                   <TableHead className="text-center font-semibold text-white">UP</TableHead>
                   <TableHead className="text-center font-semibold text-white">Estado</TableHead>
                   <TableHead className="text-center font-semibold text-white"></TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className="border-x box-border" id={`body-${waterTankerName}`}>
                 {!filteredRequests.length && (
                   <TableRow>
                     <TableCell className="text-center w-[404px]" colSpan={3}>

@@ -7,7 +7,7 @@ import type { FC } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { cancelRequest, createRequest } from './actions';
+import { cancelRequest, completeRequest, createRequest } from './actions';
 import { getBestList } from './utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardTitle } from '@/components/ui/card';
@@ -31,6 +31,7 @@ interface Props {
 
 const MyRequestAction: FC<Props> = ({ openRequest, waterTankers }) => {
   const [isRemoving, setRemovingState] = useState(false);
+  const [isCompleting, setCompletingState] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     defaultValues: {
@@ -49,6 +50,7 @@ const MyRequestAction: FC<Props> = ({ openRequest, waterTankers }) => {
 
   useEffect(() => {
     setRemovingState(false);
+    setCompletingState(false);
   }, [waterTankers]);
 
   useEffect(() => {
@@ -70,14 +72,21 @@ const MyRequestAction: FC<Props> = ({ openRequest, waterTankers }) => {
     }
   }
 
-  function onGoToWaterTanker() {
+  function onComplete() {
     if (openRequest) {
-      const listElement = document.querySelector(`[data-water-tanker-name="${openRequest.waterTankerName}"]`);
+      setCompletingState(true);
+      completeRequest(openRequest.uuid).finally(() => form.reset({ list: '' as List, waterTankerName: '' }));
+    }
+  }
 
-      if (listElement) {
+  function onScrollToRequest() {
+    if (openRequest) {
+      const requestRow = document.getElementById(openRequest.uuid);
+
+      if (requestRow) {
         window.scrollTo({
           behavior: 'smooth',
-          top: listElement.getBoundingClientRect().top + window.scrollY - 100,
+          top: requestRow.getBoundingClientRect().top + window.scrollY - 166,
         });
       }
     }
@@ -164,18 +173,33 @@ const MyRequestAction: FC<Props> = ({ openRequest, waterTankers }) => {
       {openRequest && (
         <CardFooter className="flex justify-center gap-x-4">
           <CardAction>
-            <Button disabled={isRemoving} onClick={onGoToWaterTanker} variant="outline">
-              Ver pipa
-            </Button>
-          </CardAction>
-          <CardAction>
-            <Button disabled={isRemoving} onClick={onRemove} variant="destructive">
+            <Button disabled={isCompleting || isRemoving} onClick={onRemove} variant="destructive">
               {isRemoving ? (
                 <>
                   Quitándome <Loader2 className="animate-spin" />
                 </>
               ) : (
                 'Quitarme'
+              )}
+            </Button>
+          </CardAction>
+          <CardAction>
+            <Button disabled={isCompleting || isRemoving} onClick={onScrollToRequest} variant="outline">
+              Ver solicitud
+            </Button>
+          </CardAction>
+          <CardAction>
+            <Button
+              className="bg-teal-400 text-teal-950 hover:bg-teal-300"
+              disabled={isCompleting || isRemoving}
+              onClick={onComplete}
+            >
+              {isCompleting ? (
+                <>
+                  Completando <Loader2 className="animate-spin" />
+                </>
+              ) : (
+                'Completar'
               )}
             </Button>
           </CardAction>

@@ -26,6 +26,7 @@ const RequestRow: FC<Props> = (props) => {
         'bg-blue-50': currentUserId === request.house,
         'opacity-50': request.status !== 'pending',
       })}
+      id={request.uuid}
       key={request.uuid}
     >
       <TableCell className="w-[105px]">
