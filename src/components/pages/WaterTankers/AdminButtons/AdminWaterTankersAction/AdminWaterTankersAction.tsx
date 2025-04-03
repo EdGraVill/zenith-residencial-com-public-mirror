@@ -26,7 +26,7 @@ const AdminWaterTankersAction: FC<Props> = ({ isAdmin, waterTankers }) =>
       <DialogTrigger asChild>
         <Button variant="outline">Administrar pipas</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[100vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Administrar pipas</DialogTitle>
           <DialogDescription>Crear, Editar o Eliminar pipas</DialogDescription>

@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 
 import type User from './User';
 import { db } from '@/db';
@@ -6,7 +6,11 @@ import { privateNoticesTable } from '@/db/privateSchema';
 
 export default class Notice {
   public static async getNotices(): Promise<Omit<typeof privateNoticesTable.$inferSelect, 'userId'>[]> {
-    const notices = await db.select().from(privateNoticesTable).where(eq(privateNoticesTable.isActive, true));
+    const notices = await db
+      .select()
+      .from(privateNoticesTable)
+      .where(eq(privateNoticesTable.isActive, true))
+      .orderBy(asc(privateNoticesTable.createdAt));
 
     notices.forEach((notice) => {
       Reflect.deleteProperty(notice, 'userId');

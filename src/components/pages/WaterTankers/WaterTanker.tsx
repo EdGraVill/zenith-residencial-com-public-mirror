@@ -125,19 +125,21 @@ const WaterTanker: FC<ListsProps> = ({ currentUserId, isAdmin, waterTankers }) =
                 ))}
               </TableBody>
               <TableFooter>
-                <TableCell colSpan={3}>
-                  <div className="flex items-center justify-end gap-6 py-2">
-                    <Label className="text-xs" htmlFor={switchId}>
-                      Mostrar <Badge className="bg-red-100 text-red-800 opacity-50 scale-75 -m-2">Cancelados</Badge> y{' '}
-                      <Badge className="bg-green-100 text-green-800 opacity-50 scale-75 -m-2">Completados</Badge>
-                    </Label>
-                    <Switch
-                      checked={showNonPending[waterTankerName]}
-                      id={switchId}
-                      onCheckedChange={updateWaterTankerShowNonPending(waterTankerName, setShowNonPending)}
-                    />
-                  </div>
-                </TableCell>
+                <TableRow>
+                  <TableCell colSpan={3}>
+                    <div className="flex items-center justify-end gap-6 py-2">
+                      <Label className="text-xs" htmlFor={switchId}>
+                        Mostrar <Badge className="bg-red-100 text-red-800 opacity-50 scale-75 -m-2">Cancelados</Badge> y{' '}
+                        <Badge className="bg-green-100 text-green-800 opacity-50 scale-75 -m-2">Completados</Badge>
+                      </Label>
+                      <Switch
+                        checked={showNonPending[waterTankerName]}
+                        id={switchId}
+                        onCheckedChange={updateWaterTankerShowNonPending(waterTankerName, setShowNonPending)}
+                      />
+                    </div>
+                  </TableCell>
+                </TableRow>
               </TableFooter>
             </Table>
           </div>

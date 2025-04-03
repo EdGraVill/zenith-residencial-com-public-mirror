@@ -4,6 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, SquareMenu } from 'lucide-react';
 import { type FC, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import Markdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 import { z } from 'zod';
 
 import { removeNotice, updateNotice } from '../../actions';
@@ -118,7 +120,11 @@ const Row: FC<Props> = ({ notice }) => {
 
   return (
     <TableRow>
-      <TableCell>{notice.notice}</TableCell>
+      <TableCell className="max-w-[327px]">
+        <span className="[&_a]:underline [&_a]:text-blue-500 [&_a]:hover:text-blue-600 text-balance break-words">
+          <Markdown rehypePlugins={[rehypeRaw]}>{notice.notice}</Markdown>
+        </span>
+      </TableCell>
       <TableCell>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

@@ -54,7 +54,7 @@ export const Comments: FC<Props> = ({ currentUserId, isOpen, request, setOpenSta
 
   return (
     <Dialog onOpenChange={setOpenState} open={isOpen}>
-      <DialogContent>
+      <DialogContent className="max-h-[100vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             Comentarios sobre la casa {request.house} en la pipa {request.waterTankerName}

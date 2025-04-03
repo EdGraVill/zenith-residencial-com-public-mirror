@@ -68,7 +68,7 @@ const NewTestingRequest: FC<Props> = ({ isAdmin, waterTankers }) => {
       <DialogTrigger asChild>
         <Button variant="outline">Agregar prueba</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[100vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Agregar solicitud de prueba</DialogTitle>
           <DialogDescription>Crear una solicitud de prueba en nombre de otra casa</DialogDescription>

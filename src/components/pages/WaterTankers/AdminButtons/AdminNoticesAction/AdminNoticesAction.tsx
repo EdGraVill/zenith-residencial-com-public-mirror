@@ -25,7 +25,7 @@ const AdminNoticesAction: FC<Props> = ({ isAdmin, notices }) =>
       <DialogTrigger asChild>
         <Button variant="outline">Administrar avisos</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[100vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Administrar avisos</DialogTitle>
           <DialogDescription>

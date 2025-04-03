@@ -138,7 +138,9 @@ const Row: FC<Props> = ({ waterTanker }) => {
   return (
     <TableRow>
       <TableCell>{waterTanker.name}</TableCell>
-      <TableCell>{waterTanker.description}</TableCell>
+      <TableCell className="w-[227px]">
+        <span className="text-balance">{waterTanker.description}</span>
+      </TableCell>
       <TableCell>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
