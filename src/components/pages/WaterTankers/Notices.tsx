@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import type { FC } from 'react';
+import Markdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -37,10 +39,10 @@ const Notices: FC<Props> = ({ notices }) => {
           </div>
         </CardHeader>
         <CardContent>
-          <ul className="p-4">
+          <ul className="p-4 [&_a]:underline [&_a]:text-blue-500 [&_a]:hover:text-blue-600 text-balance break-words">
             {notices.map((notice) => (
-              <li className="text-accent-foreground text-sm list-disc" key={notice.id}>
-                {notice.notice}
+              <li className="text-accent-foreground text-sm list-disc mt-4 first:mt-0" key={notice.id}>
+                <Markdown rehypePlugins={[rehypeRaw]}>{notice.notice}</Markdown>
               </li>
             ))}
           </ul>

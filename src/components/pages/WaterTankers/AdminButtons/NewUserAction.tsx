@@ -60,7 +60,7 @@ const NewUserAction: FC<Props> = ({ isAdmin }) => {
       <DialogTrigger asChild>
         <Button variant="outline">Agregar usuario</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[100vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Agregar usuario</DialogTitle>
           <DialogDescription>Asociar teléfono con casa.</DialogDescription>
